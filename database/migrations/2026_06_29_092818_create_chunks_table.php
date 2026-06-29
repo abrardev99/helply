@@ -19,7 +19,10 @@ return new class extends Migration
             $table->foreignUuid('bot_id')->constrained()->cascadeOnDelete();
             $table->foreignUuid('document_id')->constrained()->cascadeOnDelete();
             $table->text('content');
-            $table->vector('embedding', 1536);
+            // Embeddings are generated in a later phase; allow NULL so a page's text can
+            // be stored without one. NOTE: changing this column in place requires a fresh
+            // migration (`php artisan migrate:fresh`) in development.
+            $table->vector('embedding', 1536)->nullable();
             $table->timestamps();
         });
 
