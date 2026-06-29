@@ -2,6 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\Bot;
+use App\Models\Chunk;
+use App\Models\Conversation;
+use App\Models\Document;
+use App\Models\Membership;
+use App\Models\Message;
+use App\Models\Team;
+use App\Models\TeamInvitation;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
@@ -60,8 +68,14 @@ class AppServiceProvider extends ServiceProvider
 
         Relation::enforceMorphMap([
             'user' => User::class,
+            'team' => Team::class,
+            'membership' => Membership::class,
+            'team_invitation' => TeamInvitation::class,
+            'bot' => Bot::class,
+            'document' => Document::class,
+            'chunk' => Chunk::class,
+            'conversation' => Conversation::class,
+            'message' => Message::class,
         ]);
-
     }
-
 }

@@ -205,3 +205,19 @@ Use Wayfinder to generate TypeScript functions for Laravel routes. Import from `
 - IMPORTANT: Activate `inertia-react-development` when working with Inertia React client-side patterns.
 
 </laravel-boost-guidelines>
+
+# Project Conventions
+
+## Eloquent Models
+
+- Do NOT add `protected $guarded = [];` to models. Mass assignment is unguarded globally via `Model::unguard()` in `App\Providers\AppServiceProvider::configureModels()`, so per-model `$guarded`/`$fillable` is unnecessary and should be omitted.
+- Every Eloquent model MUST be registered in the morph map in `App\Providers\AppServiceProvider::configureModels()` via `Relation::enforceMorphMap([...])`, using a lowercase snake_case alias (e.g. `'team_invitation' => TeamInvitation::class`). When you create a new model, add its entry to that map.
+
+## Enums
+
+- Any column that holds a fixed set of values (statuses, types, roles, etc.) MUST be backed by a string-backed enum in `app/Enums`, not raw strings. Use TitleCase cases (e.g. `case Pending = 'pending';`) and provide a `label(): string` method returning the human-readable label.
+- Use the enum everywhere that value appears: cast the model attribute to the enum class in `casts()`, reference it in migration defaults (`->default(DocumentStatus::Pending->value)`), and use enum cases (not strings) in factories and seeders.
+
+## Translations
+
+- All user-facing strings MUST be wrapped in the `__()` translation helper. English is the default locale: use the English string itself as the key (e.g. `__('Pending')`), so no translation file is required until other locales are added.
