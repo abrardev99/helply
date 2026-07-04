@@ -1,6 +1,6 @@
 # F09 — Answer Generation
 
-**Phase:** 3 · **Status:** ⛔ todo · **Depends on:** F04, F08
+**Phase:** 3 · **Status:** ✅ done · **Depends on:** F04, F08
 
 ## Goal
 
