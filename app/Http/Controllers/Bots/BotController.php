@@ -101,6 +101,7 @@ class BotController extends Controller
                 'total' => $bot->chunks()->count(),
                 'embedded' => $bot->chunks()->whereNotNull('embedding')->count(),
             ],
+            'widgetScriptUrl' => url('/widget.js'),
             'permissions' => [
                 'canManageBots' => $request->user()->hasTeamPermission($bot->team, TeamPermission::ManageBots),
             ],

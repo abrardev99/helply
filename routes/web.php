@@ -9,10 +9,13 @@ use App\Http\Controllers\Bots\ReembedController;
 use App\Http\Controllers\Bots\WebsiteSourceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Teams\TeamInvitationController;
+use App\Http\Controllers\WidgetScriptController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
+
+Route::get('widget.js', WidgetScriptController::class)->name('widget.script');
 
 Route::prefix('{current_team}')
     ->middleware(['auth', 'verified', EnsureTeamMembership::class])

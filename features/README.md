@@ -50,7 +50,7 @@ criteria. Architecture context lives in [`/docs`](../docs).
 | [F09](F09-answer-generation.md) | Answer generation | ✅ done | F04, F08 |
 | [F10](F10-guardrails.md) | Guardrails (relevance + grounding) | ✅ done | F08, F09 |
 | [F11](F11-conversations-analytics.md) | Conversations & analytics | ✅ done | F07 |
-| [F12](F12-widget-loader.md) | Embeddable widget loader | ⛔ todo | F07 |
+| [F12](F12-widget-loader.md) | Embeddable widget loader | ✅ done | F07 |
 
 ## Suggested build order
 

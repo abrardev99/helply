@@ -1,5 +1,6 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
 import { MessagesSquare, Pencil, RefreshCw, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +18,7 @@ type Props = {
     bot: Bot;
     documents: BotDocument[];
     embedding: { total: number; embedded: number };
+    widgetScriptUrl: string;
     permissions: BotPermissions;
 };
 
@@ -31,13 +33,24 @@ export default function BotsShow({
     bot,
     documents: botDocuments,
     embedding,
+    widgetScriptUrl,
     permissions,
 }: Props) {
     const currentTeam = usePage().props.currentTeam;
+    const [copied, setCopied] = useState(false);
 
     if (!currentTeam) {
         return null;
     }
+
+    const embedSnippet = `<script src="${widgetScriptUrl}" data-bot-id="${bot.id}" defer></script>`;
+
+    const copySnippet = () => {
+        navigator.clipboard?.writeText(embedSnippet).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        });
+    };
 
     return (
         <>
@@ -101,6 +114,30 @@ export default function BotsShow({
                             No origins configured yet.
                         </p>
                     )}
+                </div>
+
+                <div className="space-y-3">
+                    <Heading
+                        variant="small"
+                        title="Embed on your site"
+                        description="Paste this into your site's <body>. The bot only replies on domains listed in Allowed origins above."
+                    />
+                    <div className="flex max-w-2xl items-center gap-2">
+                        <code
+                            data-test="embed-snippet"
+                            className="flex-1 overflow-x-auto rounded-md border bg-muted px-3 py-2 text-xs whitespace-nowrap"
+                        >
+                            {embedSnippet}
+                        </code>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            data-test="copy-embed-button"
+                            onClick={copySnippet}
+                        >
+                            {copied ? 'Copied' : 'Copy'}
+                        </Button>
+                    </div>
                 </div>
 
                 {permissions.canManageBots ? (
