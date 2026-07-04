@@ -11,7 +11,8 @@ class VerifyWidgetOrigin
 {
     /**
      * Reject widget requests whose Origin/Referer is not in the agent's allow-list, and
-     * reflect only an allow-listed origin back in the CORS headers.
+     * reflect only an allow-listed origin back in the CORS headers. Also answers the
+     * browser's CORS preflight (OPTIONS) request.
      *
      * Note: Origin is browser-enforced, not a hard security boundary (a script can forge
      * it). It ties usage to the customer's domains and stops casual cross-site embedding;
@@ -23,17 +24,40 @@ class VerifyWidgetOrigin
 
         $origin = $this->requestOrigin($request);
         $allowed = $agent instanceof Agent ? ($agent->embed_origins ?? []) : [];
+        $originIsAllowed = $origin !== null && in_array($origin, $allowed, true);
 
-        if ($origin === null || ! in_array($origin, $allowed, true)) {
+        // CORS preflight: never reaches the controller. Approve only allow-listed origins.
+        if ($request->getMethod() === 'OPTIONS') {
+            $response = response()->noContent();
+
+            if ($originIsAllowed) {
+                $this->applyCorsHeaders($response, $origin);
+            }
+
+            return $response;
+        }
+
+        if (! $originIsAllowed) {
             abort(403, __('This origin is not allowed to use this agent.'));
         }
 
         $response = $next($request);
 
-        $response->headers->set('Access-Control-Allow-Origin', $origin);
-        $response->headers->set('Vary', 'Origin');
+        $this->applyCorsHeaders($response, $origin);
 
         return $response;
+    }
+
+    /**
+     * Reflect the (already allow-listed) origin and declare the allowed methods/headers.
+     */
+    private function applyCorsHeaders(Response $response, string $origin): void
+    {
+        $response->headers->set('Access-Control-Allow-Origin', $origin);
+        $response->headers->set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Accept');
+        $response->headers->set('Access-Control-Max-Age', '86400');
+        $response->headers->set('Vary', 'Origin');
     }
 
     /**

@@ -123,3 +123,30 @@ it('throttles floods with a 429', function () {
     expect($statuses[0])->toBe(200)
         ->and($statuses)->toContain(429);
 });
+
+it('answers the CORS preflight for an allow-listed origin', function () {
+    $agent = widgetAgent();
+
+    $response = $this->options(chatUrl($agent), [], ['Origin' => ALLOWED_ORIGIN]);
+
+    $response->assertNoContent();
+    expect($response->headers->get('Access-Control-Allow-Origin'))->toBe(ALLOWED_ORIGIN)
+        ->and($response->headers->get('Access-Control-Allow-Methods'))->toContain('POST');
+});
+
+it('does not send CORS approval on preflight from a disallowed origin', function () {
+    $agent = widgetAgent();
+
+    $response = $this->options(chatUrl($agent), [], ['Origin' => 'https://evil.example.com']);
+
+    expect($response->headers->get('Access-Control-Allow-Origin'))->toBeNull();
+});
+
+it('sets the CORS header on the chat response', function () {
+    fakeAnsweringPipeline();
+    $agent = widgetAgent();
+
+    $response = $this->postJson(chatUrl($agent), ['message' => 'hi'], ['Origin' => ALLOWED_ORIGIN]);
+
+    expect($response->headers->get('Access-Control-Allow-Origin'))->toBe(ALLOWED_ORIGIN);
+});
