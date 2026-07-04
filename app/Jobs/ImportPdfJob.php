@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Enums\DocumentStatus;
 use App\Models\Document;
+use App\Services\Ingestion\TextChunker;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
@@ -57,7 +58,9 @@ class ImportPdfJob implements ShouldQueue
                 throw new RuntimeException("Stored PDF is missing: {$path}");
             }
 
-            $chunks = $this->extractChunks(Storage::disk('local')->get($path));
+            $text = $this->extractText(Storage::disk('local')->get($path));
+
+            $chunks = (new TextChunker)->chunk($text);
 
             if ($chunks === []) {
                 throw new RuntimeException('No extractable text found in PDF.');
@@ -66,9 +69,10 @@ class ImportPdfJob implements ShouldQueue
             DB::transaction(function () use ($document, $chunks): void {
                 $document->chunks()->delete();
 
-                foreach ($chunks as $content) {
+                foreach ($chunks as $position => $content) {
                     $document->chunks()->create([
                         'bot_id' => $document->bot_id,
+                        'position' => $position,
                         'content' => $content,
                         'embedding' => null,
                     ]);
@@ -84,34 +88,24 @@ class ImportPdfJob implements ShouldQueue
     }
 
     /**
-     * Extract one text chunk per page, falling back to the whole-document text when a
-     * PDF exposes no per-page structure.
-     *
-     * @return list<string>
+     * Extract the full readable text of a PDF, concatenating pages. Retrieval-sized
+     * chunking is applied afterwards by the TextChunker (F05).
      */
-    private function extractChunks(string $contents): array
+    private function extractText(string $contents): string
     {
         $pdf = (new Parser)->parseContent($contents);
 
-        $chunks = [];
+        $pages = [];
 
         foreach ($pdf->getPages() as $page) {
             $text = Str::squish($page->getText());
 
             if ($text !== '') {
-                $chunks[] = $text;
+                $pages[] = $text;
             }
         }
 
-        if ($chunks === []) {
-            $text = Str::squish($pdf->getText());
-
-            if ($text !== '') {
-                $chunks[] = $text;
-            }
-        }
-
-        return $chunks;
+        return $pages === [] ? Str::squish($pdf->getText()) : implode(' ', $pages);
     }
 
     /**

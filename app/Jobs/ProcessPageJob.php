@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Enums\DocumentStatus;
 use App\Models\Document;
+use App\Services\Ingestion\TextChunker;
 use App\Support\SafeUrl;
 use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -81,17 +82,22 @@ class ProcessPageJob implements ShouldQueue
 
             $extracted = $this->extractReadableText(substr($response->body(), 0, self::MAX_PAGE_BYTES));
 
+            $chunks = (new TextChunker)->chunk($extracted['text']);
+
             // IDEMPOTENT delete-before-insert: a retry (or a later re-crawl) must not
-            // duplicate chunks for this page. For this stage one page == exactly one
-            // chunk, stored with a NULL embedding (embeddings come in a later phase).
-            DB::transaction(function () use ($document, $extracted): void {
+            // duplicate chunks for this page. Text is split into retrieval-sized,
+            // overlapping chunks (F05), each stored with a NULL embedding (added in F06).
+            DB::transaction(function () use ($document, $extracted, $chunks): void {
                 $document->chunks()->delete();
 
-                $document->chunks()->create([
-                    'bot_id' => $document->bot_id,
-                    'content' => $extracted['text'],
-                    'embedding' => null,
-                ]);
+                foreach ($chunks as $position => $content) {
+                    $document->chunks()->create([
+                        'bot_id' => $document->bot_id,
+                        'position' => $position,
+                        'content' => $content,
+                        'embedding' => null,
+                    ]);
+                }
 
                 $document->update([
                     'title' => $extracted['title'] ?? $document->title,

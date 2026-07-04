@@ -1,6 +1,6 @@
 # F05 — Chunking Strategy
 
-**Phase:** 2 · **Status:** ⛔ todo · **Depends on:** F02 / F03
+**Phase:** 2 · **Status:** ✅ done · **Depends on:** F02 / F03
 
 ## Goal
 
