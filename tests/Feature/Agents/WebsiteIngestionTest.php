@@ -85,23 +85,6 @@ it('rejects URLs that target private or internal addresses', function () {
     Queue::assertNothingPushed();
 });
 
-it('rejects a website URL whose site has no sitemap', function () {
-    Queue::fake();
-    Http::fake([PUBLIC_HOST.'/sitemap.xml' => Http::response('Not found', 404)]);
-
-    [$user, $team] = ingestionMember(TeamRole::Owner);
-    $agent = Agent::factory()->for($team)->create();
-
-    $this->actingAs($user)
-        ->post(route('agents.sources.store', ['current_team' => $team->slug, 'agent' => $agent->id]), [
-            'url' => PUBLIC_HOST.'/docs',
-        ])
-        ->assertInvalid(['url']);
-
-    expect(Document::query()->count())->toBe(0);
-    Queue::assertNothingPushed();
-});
-
 it('forbids members from adding website sources', function () {
     Queue::fake();
 
@@ -192,13 +175,15 @@ it('does not duplicate documents when a crawl re-runs', function () {
     expect($agent->documents()->count())->toBe(2);
 });
 
-it('fails the seed gracefully when the site has no sitemap', function () {
+it('crawls from the seed when the site has no sitemap', function () {
+    Bus::fake();
+
     Http::fake([
         PUBLIC_HOST.'/sitemap.xml' => Http::response('Not found', 404),
     ]);
 
     $agent = Agent::factory()->create();
-    $seed = Document::factory()->for($agent)->create([
+    Document::factory()->for($agent)->create([
         'type' => DocumentType::Web,
         'source_url' => PUBLIC_HOST.'/',
         'status' => DocumentStatus::Pending,
@@ -206,8 +191,8 @@ it('fails the seed gracefully when the site has no sitemap', function () {
 
     (new CrawlSiteJob($agent->id, PUBLIC_HOST.'/'))->handle();
 
-    // Not left stuck on pending — marked failed so the dashboard reflects it.
-    expect($seed->fresh()->status)->toBe(DocumentStatus::Failed);
+    // No sitemap is fine: still crawl from the seed (link-following expands from there).
+    Bus::assertBatched(fn ($batch) => $batch->jobs->count() === 1);
 });
 
 it('fails the seed when even it is not a safe target', function () {
@@ -223,6 +208,33 @@ it('fails the seed when even it is not a safe target', function () {
     (new CrawlSiteJob($agent->id, 'http://127.0.0.1/internal'))->handle();
 
     expect($seed->fresh()->status)->toBe(DocumentStatus::Failed);
+});
+
+it('follows same-host links to crawl the rest of the site', function () {
+    Queue::fake();
+    Http::fake([
+        '*' => Http::response('<html><body><main>Home page.</main>'
+            .'<a href="/about">About</a>'
+            .'<a href="/pricing">Pricing</a>'
+            .'<a href="https://other-site.com/x">External</a>'
+            .'<a href="#top">Anchor</a></body></html>'),
+    ]);
+
+    $agent = Agent::factory()->create();
+    $document = Document::factory()->for($agent)->create([
+        'type' => DocumentType::Web,
+        'source_url' => PUBLIC_HOST.'/',
+        'status' => DocumentStatus::Processing,
+    ]);
+
+    (new ProcessPageJob($document->id))->handle();
+
+    // Same-host links become new pages; external + anchor links are ignored.
+    expect($agent->documents()->where('source_url', PUBLIC_HOST.'/about')->exists())->toBeTrue()
+        ->and($agent->documents()->where('source_url', PUBLIC_HOST.'/pricing')->exists())->toBeTrue()
+        ->and($agent->documents()->where('source_url', 'https://other-site.com/x')->exists())->toBeFalse();
+
+    Queue::assertPushed(ProcessPageJob::class, 2);
 });
 
 it('processes a page into a single chunk and is idempotent on re-run', function () {

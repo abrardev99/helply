@@ -3,9 +3,12 @@
 namespace App\Jobs;
 
 use App\Enums\DocumentStatus;
+use App\Enums\DocumentType;
 use App\Models\Document;
 use App\Services\Ingestion\TextChunker;
 use App\Support\SafeUrl;
+use GuzzleHttp\Psr7\UriResolver;
+use GuzzleHttp\Psr7\Utils;
 use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -80,7 +83,8 @@ class ProcessPageJob implements ShouldQueue
             // handling below (status => failed, then rethrow for the batch).
             $response->throw();
 
-            $extracted = $this->extractReadableText(substr($response->body(), 0, self::MAX_PAGE_BYTES));
+            $body = substr($response->body(), 0, self::MAX_PAGE_BYTES);
+            $extracted = $this->extractReadableText($body);
 
             $chunks = (new TextChunker)->chunk($extracted['text']);
 
@@ -108,6 +112,10 @@ class ProcessPageJob implements ShouldQueue
             // Kick off embedding now that the page's chunks exist. Dispatched after the
             // transaction commits; a no-op when no OpenAI key is configured.
             EmbedChunksJob::dispatch($document->agent_id);
+
+            // Follow internal links so the whole site is crawled, not just the seed /
+            // sitemap URLs. Bounded by MAX_PAGES.
+            $this->crawlLinkedPages($document, $body);
         } catch (Throwable $exception) {
             // Mark failed and rethrow so the batch records the failure. failed() below is
             // the terminal safety net for cases where handle() is never reached.
@@ -175,6 +183,101 @@ class ProcessPageJob implements ShouldQueue
         $node = $nodes instanceof \DOMNodeList ? $nodes->item(0) : null;
 
         return $node instanceof \DOMNode ? $node : null;
+    }
+
+    /**
+     * Discover same-host links on this page and queue any not-yet-seen ones for crawling,
+     * so the whole site is ingested by following links. Idempotent (firstOrCreate) and
+     * bounded by CrawlSiteJob::MAX_PAGES.
+     */
+    private function crawlLinkedPages(Document $document, string $html): void
+    {
+        $agentId = $document->agent_id;
+
+        $count = Document::query()
+            ->where('agent_id', $agentId)
+            ->where('type', DocumentType::Web)
+            ->count();
+
+        if ($count >= CrawlSiteJob::MAX_PAGES) {
+            return;
+        }
+
+        foreach ($this->discoverLinks($html, (string) $document->source_url) as $url) {
+            if ($count >= CrawlSiteJob::MAX_PAGES) {
+                break;
+            }
+
+            $child = Document::query()->firstOrCreate(
+                ['agent_id' => $agentId, 'source_url' => $url],
+                ['type' => DocumentType::Web, 'status' => DocumentStatus::Pending],
+            );
+
+            if ($child->wasRecentlyCreated) {
+                $count++;
+                self::dispatch($child->id);
+            }
+        }
+    }
+
+    /**
+     * Extract absolute, same-host, http(s) links from a page (fragments stripped, deduped,
+     * SSRF-filtered).
+     *
+     * @return list<string>
+     */
+    private function discoverLinks(string $html, string $baseUrl): array
+    {
+        $dom = new \DOMDocument;
+        $previous = libxml_use_internal_errors(true);
+        $dom->loadHTML('<?xml encoding="UTF-8">'.$html, LIBXML_NOERROR | LIBXML_NONET);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        $anchors = (new \DOMXPath($dom))->query('//a[@href]');
+
+        if (! $anchors instanceof \DOMNodeList) {
+            return [];
+        }
+
+        $base = Utils::uriFor($baseUrl);
+        $baseHost = strtolower($base->getHost());
+        $links = [];
+
+        foreach ($anchors as $anchor) {
+            if (! $anchor instanceof \DOMElement) {
+                continue;
+            }
+
+            $href = trim($anchor->getAttribute('href'));
+
+            if ($href === '' || Str::startsWith($href, ['#', 'mailto:', 'tel:', 'javascript:'])) {
+                continue;
+            }
+
+            try {
+                $resolved = UriResolver::resolve($base, Utils::uriFor($href))->withFragment('');
+            } catch (Throwable) {
+                continue;
+            }
+
+            if (! in_array(strtolower($resolved->getScheme()), ['http', 'https'], true)) {
+                continue;
+            }
+
+            // Same-host only, so a crawl stays within the customer's site.
+            if (strtolower($resolved->getHost()) !== $baseHost) {
+                continue;
+            }
+
+            $url = (string) $resolved;
+
+            if (SafeUrl::hasSafeTarget($url)) {
+                $links[$url] = true;
+            }
+        }
+
+        return array_keys($links);
     }
 
     /**

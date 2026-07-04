@@ -39,9 +39,10 @@ class CrawlSiteJob implements ShouldQueue
 
     /**
      * Hard cap on how many pages a single crawl will ingest. Guards against enormous
-     * sitemaps exhausting the queue and the customer's embedding budget.
+     * sitemaps (and link-following crawls) exhausting the queue and the customer's
+     * embedding budget.
      */
-    private const MAX_PAGES = 200;
+    public const MAX_PAGES = 200;
 
     /**
      * @param  string  $agentId  The owning agent (UUID).
@@ -95,20 +96,26 @@ class CrawlSiteJob implements ShouldQueue
                 ->values();
         }
 
-        // No usable sitemap URLs (site has no sitemap, or only the seed survived). A
-        // sitemap is required to enumerate a site's public pages — this is enforced at
-        // add-time by the HasSitemap rule — so fail the seed/claimed docs gracefully
-        // rather than leaving them stuck pending.
-        if ($pageUrls->count() <= 1) {
-            Log::warning('CrawlSiteJob found no sitemap URLs.', [
+        // Nothing safe to crawl (not even the seed survived the SSRF filter): fail the seed
+        // so it does not sit pending forever.
+        if ($pageUrls->isEmpty()) {
+            Log::warning('CrawlSiteJob found no crawlable URLs.', [
                 'agent_id' => $this->agentId,
                 'sitemap_url' => $sitemapUrl,
             ]);
 
-            $this->markProcessingAsFailed();
             $this->markSeedAsFailed();
 
             return;
+        }
+
+        // A missing sitemap is fine: we start from whatever URLs we have (at minimum the
+        // seed) and ProcessPageJob discovers the rest of the site by following internal
+        // links, up to MAX_PAGES.
+        if ($pageUrls->count() === 1) {
+            Log::info('CrawlSiteJob starting from the seed; will follow internal links.', [
+                'agent_id' => $this->agentId,
+            ]);
         }
 
         // Idempotent on (agent_id, source_url): create a document per discovered URL only

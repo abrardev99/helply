@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Agents;
 
-use App\Rules\HasSitemap;
 use App\Rules\PublicUrl;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -25,10 +24,8 @@ class StoreWebsiteSourceRequest extends FormRequest
      */
     public function rules(): array
     {
-        // `bail` stops at the first failure so we only fetch the sitemap for a URL that is
-        // already a valid, public http(s) address.
         return [
-            'url' => ['bail', 'required', 'string', 'max:2048', new PublicUrl, new HasSitemap],
+            'url' => ['bail', 'required', 'string', 'max:2048', new PublicUrl],
         ];
     }
 }

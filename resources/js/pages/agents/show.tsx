@@ -155,7 +155,7 @@ export default function AgentsShow({
                         <Heading
                             variant="small"
                             title="Add a website"
-                            description="We'll crawl the site's sitemap.xml and ingest each page."
+                            description="We'll crawl the site — following its sitemap and internal links — and ingest each page."
                         />
 
                         <Form
