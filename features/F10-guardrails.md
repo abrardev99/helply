@@ -1,6 +1,6 @@
 # F10 — Guardrails (Relevance Gate + Grounding Check)
 
-**Phase:** 3 · **Status:** ⛔ todo · **Depends on:** F08, F09
+**Phase:** 3 · **Status:** ✅ done · **Depends on:** F08, F09
 
 ## Goal
 
