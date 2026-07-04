@@ -173,19 +173,38 @@ it('does not duplicate documents when a crawl re-runs', function () {
     expect($agent->documents()->count())->toBe(2);
 });
 
-it('fails documents gracefully when the site has no sitemap', function () {
+it('ingests the seed page when the site has no sitemap', function () {
+    Bus::fake();
+
     Http::fake([
         PUBLIC_HOST.'/sitemap.xml' => Http::response('Not found', 404),
     ]);
 
     $agent = Agent::factory()->create();
-    $seed = Document::factory()->for($agent)->create([
-        'type' => 'web',
+    Document::factory()->for($agent)->create([
+        'type' => DocumentType::Web,
         'source_url' => PUBLIC_HOST.'/',
-        'status' => DocumentStatus::Processing,
+        'status' => DocumentStatus::Pending,
     ]);
 
     (new CrawlSiteJob($agent->id, PUBLIC_HOST.'/'))->handle();
+
+    // Only the seed URL, dispatched for processing — not left stuck or failed.
+    expect($agent->documents()->count())->toBe(1);
+    Bus::assertBatched(fn ($batch) => $batch->jobs->count() === 1);
+});
+
+it('fails the seed when even it is not a safe target', function () {
+    Http::fake(); // no real network; the seed is rejected by the SSRF filter regardless
+
+    $agent = Agent::factory()->create();
+    $seed = Document::factory()->for($agent)->create([
+        'type' => DocumentType::Web,
+        'source_url' => 'http://127.0.0.1/internal',
+        'status' => DocumentStatus::Pending,
+    ]);
+
+    (new CrawlSiteJob($agent->id, 'http://127.0.0.1/internal'))->handle();
 
     expect($seed->fresh()->status)->toBe(DocumentStatus::Failed);
 });

@@ -95,17 +95,26 @@ class CrawlSiteJob implements ShouldQueue
                 ->values();
         }
 
-        // No sitemap (or an empty one) => log and fail gracefully. Release the claimed
-        // seed(s) to 'failed' so they don't sit in 'processing' forever.
-        if ($pageUrls->count() <= 1) {
-            Log::warning('CrawlSiteJob found no sitemap URLs.', [
+        // No safe URLs at all (not even the seed survived the SSRF filter) => fail the seed
+        // so it does not sit pending forever.
+        if ($pageUrls->isEmpty()) {
+            Log::warning('CrawlSiteJob found no crawlable URLs.', [
                 'agent_id' => $this->agentId,
                 'sitemap_url' => $sitemapUrl,
             ]);
 
-            $this->markProcessingAsFailed();
+            $this->markSeedAsFailed();
 
             return;
+        }
+
+        // A missing/empty sitemap is not fatal: we still ingest the seed page itself (the
+        // one URL we always have). Many sites have no sitemap.xml.
+        if ($pageUrls->count() === 1) {
+            Log::info('CrawlSiteJob found no sitemap; ingesting the seed page only.', [
+                'agent_id' => $this->agentId,
+                'sitemap_url' => $sitemapUrl,
+            ]);
         }
 
         // Idempotent on (agent_id, source_url): create a document per discovered URL only
@@ -258,6 +267,10 @@ class CrawlSiteJob implements ShouldQueue
      */
     private function xpathFor(string $body): ?\DOMXPath
     {
+        if (trim($body) === '') {
+            return null;
+        }
+
         $dom = new \DOMDocument;
         $previous = libxml_use_internal_errors(true);
 
@@ -278,6 +291,19 @@ class CrawlSiteJob implements ShouldQueue
         Document::query()
             ->where('agent_id', $this->agentId)
             ->where('status', DocumentStatus::Processing)
+            ->update(['status' => DocumentStatus::Failed]);
+    }
+
+    /**
+     * Fail the seed document that triggered this crawl (whether pending or processing) so
+     * an un-crawlable site never leaves it stuck.
+     */
+    private function markSeedAsFailed(): void
+    {
+        Document::query()
+            ->where('agent_id', $this->agentId)
+            ->where('source_url', $this->seedUrl)
+            ->whereIn('status', [DocumentStatus::Pending, DocumentStatus::Processing])
             ->update(['status' => DocumentStatus::Failed]);
     }
 
