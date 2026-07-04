@@ -116,6 +116,10 @@ class BotController extends Controller
                 'name' => $bot->name,
                 'status' => $bot->status->value,
                 'embed_origins' => $bot->embed_origins ?? [],
+                'embedding_model' => $bot->embedding_model,
+                'chat_model' => $bot->chat_model,
+                'system_prompt' => $bot->system_prompt,
+                'confidence_threshold' => $bot->confidence_threshold,
             ],
             'statusOptions' => BotStatus::options(),
         ]);
@@ -126,11 +130,20 @@ class BotController extends Controller
      */
     public function update(UpdateBotRequest $request, string $currentTeam, Bot $bot): RedirectResponse
     {
-        $bot->update([
+        $data = [
             'name' => $request->validated('name'),
             'embed_origins' => $request->validated('embed_origins', []),
-            ...$request->has('status') ? ['status' => $request->validated('status')] : [],
-        ]);
+        ];
+
+        // Only overwrite optional settings that were actually submitted, so a partial
+        // update (e.g. a rename) leaves the model config and status untouched.
+        foreach (['status', 'embedding_model', 'chat_model', 'system_prompt', 'confidence_threshold'] as $field) {
+            if ($request->has($field)) {
+                $data[$field] = $request->validated($field);
+            }
+        }
+
+        $bot->update($data);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Bot updated.')]);
 

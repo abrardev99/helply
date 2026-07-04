@@ -56,6 +56,7 @@ class TeamController extends Controller
                 'name' => $team->name,
                 'slug' => $team->slug,
                 'isPersonal' => $team->is_personal,
+                'hasOpenAiKey' => filled($team->openai_api_key),
             ],
             'members' => $team->members()->get()->map(function (User $member) {
                 /** @var Membership $membership */

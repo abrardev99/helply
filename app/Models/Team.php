@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string $slug
  * @property bool $is_personal
+ * @property string|null $openai_api_key
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
@@ -32,6 +33,16 @@ class Team extends Model
 {
     /** @use HasFactory<TeamFactory> */
     use GeneratesUniqueTeamSlugs, HasFactory, SoftDeletes;
+
+    /**
+     * The attributes that should be hidden from array/JSON serialization.
+     *
+     * Keeps the decrypted OpenAI key out of any Inertia/JSON payload, even when the team
+     * is serialized as a relation of another model.
+     *
+     * @var list<string>
+     */
+    protected $hidden = ['openai_api_key'];
 
     /**
      * Bootstrap the model and its traits.
@@ -115,6 +126,7 @@ class Team extends Model
     {
         return [
             'is_personal' => 'boolean',
+            'openai_api_key' => 'encrypted',
         ];
     }
 

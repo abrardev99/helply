@@ -1,6 +1,6 @@
 # F04 — OpenAI Credential Management (BYO Key)
 
-**Phase:** 2 · **Status:** ⛔ todo · **Depends on:** F01
+**Phase:** 2 · **Status:** ✅ done · **Depends on:** F01
 
 > **Dependency:** introduces the **Laravel AI SDK** (`composer require laravel/ai`) and a
 > published `config/ai.php`. Adding a dependency needs approval per project guidelines.

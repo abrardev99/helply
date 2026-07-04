@@ -5,6 +5,7 @@ export type Team = {
     name: string;
     slug: string;
     isPersonal: boolean;
+    hasOpenAiKey?: boolean;
     role?: TeamRole;
     roleLabel?: string;
     isCurrent?: boolean;

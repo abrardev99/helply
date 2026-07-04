@@ -18,6 +18,11 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property array<int, string>|null $embed_origins
  * @property BotStatus $status
+ * @property string|null $openai_api_key
+ * @property string $embedding_model
+ * @property string $chat_model
+ * @property string|null $system_prompt
+ * @property float $confidence_threshold
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read int|null $documents_count
@@ -30,6 +35,15 @@ class Bot extends Model
 {
     /** @use HasFactory<BotFactory> */
     use HasFactory, HasUuids;
+
+    /**
+     * The attributes that should be hidden from array/JSON serialization.
+     *
+     * Keeps the decrypted per-bot OpenAI key out of any Inertia/JSON payload.
+     *
+     * @var list<string>
+     */
+    protected $hidden = ['openai_api_key'];
 
     /**
      * Get the team that owns the bot.
@@ -81,6 +95,8 @@ class Bot extends Model
         return [
             'embed_origins' => 'array',
             'status' => BotStatus::class,
+            'openai_api_key' => 'encrypted',
+            'confidence_threshold' => 'float',
         ];
     }
 }

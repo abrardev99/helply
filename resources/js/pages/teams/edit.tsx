@@ -6,6 +6,7 @@ import DeleteTeamModal from '@/components/delete-team-modal';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import InviteMemberModal from '@/components/invite-member-modal';
+import OpenAiKeyField from '@/components/openai-key-field';
 import RemoveMemberModal from '@/components/remove-member-modal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -143,6 +144,13 @@ export default function TeamEdit({
                         </>
                     )}
                 </div>
+
+                {permissions.canUpdateTeam ? (
+                    <OpenAiKeyField
+                        teamSlug={team.slug}
+                        hasOpenAiKey={team.hasOpenAiKey}
+                    />
+                ) : null}
 
                 <div className="space-y-6">
                     <div className="flex items-center justify-between">

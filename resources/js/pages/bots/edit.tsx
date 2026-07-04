@@ -11,7 +11,17 @@ import { edit, index, show, update } from '@/routes/bots';
 import type { Bot, StatusOption } from '@/types';
 
 type Props = {
-    bot: Pick<Bot, 'id' | 'name' | 'status' | 'embed_origins'>;
+    bot: Pick<
+        Bot,
+        | 'id'
+        | 'name'
+        | 'status'
+        | 'embed_origins'
+        | 'embedding_model'
+        | 'chat_model'
+        | 'system_prompt'
+        | 'confidence_threshold'
+    >;
     statusOptions: StatusOption[];
 };
 
@@ -86,6 +96,71 @@ export default function BotsEdit({ bot, statusOptions }: Props) {
                                     defaultOrigins={bot.embed_origins}
                                     errors={errors}
                                 />
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="chat_model">
+                                        Chat model
+                                    </Label>
+                                    <Input
+                                        id="chat_model"
+                                        name="chat_model"
+                                        data-test="bot-chat-model-input"
+                                        defaultValue={bot.chat_model}
+                                        required
+                                    />
+                                    <InputError message={errors.chat_model} />
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="embedding_model">
+                                        Embedding model
+                                    </Label>
+                                    <Input
+                                        id="embedding_model"
+                                        name="embedding_model"
+                                        data-test="bot-embedding-model-input"
+                                        defaultValue={bot.embedding_model}
+                                        required
+                                    />
+                                    <InputError
+                                        message={errors.embedding_model}
+                                    />
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="confidence_threshold">
+                                        Confidence threshold
+                                    </Label>
+                                    <Input
+                                        id="confidence_threshold"
+                                        name="confidence_threshold"
+                                        type="number"
+                                        step="0.05"
+                                        min="0"
+                                        max="1"
+                                        data-test="bot-confidence-threshold-input"
+                                        defaultValue={bot.confidence_threshold}
+                                        required
+                                    />
+                                    <InputError
+                                        message={errors.confidence_threshold}
+                                    />
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="system_prompt">
+                                        System prompt
+                                    </Label>
+                                    <textarea
+                                        id="system_prompt"
+                                        name="system_prompt"
+                                        rows={4}
+                                        data-test="bot-system-prompt-input"
+                                        defaultValue={bot.system_prompt ?? ''}
+                                        className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                                    />
+                                    <InputError message={errors.system_prompt} />
+                                </div>
 
                                 <div className="flex items-center gap-4">
                                     <Button

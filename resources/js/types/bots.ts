@@ -6,6 +6,10 @@ export type Bot = {
     status: BotStatus;
     status_label: string;
     embed_origins: string[];
+    embedding_model: string;
+    chat_model: string;
+    system_prompt: string | null;
+    confidence_threshold: number;
     documents_count?: number;
 };
 

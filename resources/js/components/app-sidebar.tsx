@@ -14,7 +14,8 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard,  index as botsIndex } from '@/routes';
+import { dashboard } from '@/routes';
+import { index as botsIndex } from '@/routes/bots';
 import type { NavItem } from '@/types';
 
 export function AppSidebar() {
@@ -31,15 +32,15 @@ export function AppSidebar() {
         },
         {
             title: 'Bot',
-            href: page.props.currentTeam ? botsIndex(currentTeam.slug).url : '/',
+            href: page.props.currentTeam ? botsIndex(page.props.currentTeam.slug).url : '/',
             'icon': Bot
         },
     ];
 
     const footerNavItems: NavItem[] = [
         {
-            title: 'Documentation',
-            href: 'https://laravel.com/docs/starter-kits#react',
+            title: 'Help & Support',
+            href: '/',
             icon: FolderGit2,
         },
     ];
