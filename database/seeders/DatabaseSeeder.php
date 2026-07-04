@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\DocumentStatus;
-use App\Models\Bot;
+use App\Models\Agent;
 use App\Models\Document;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -31,13 +31,13 @@ class DatabaseSeeder extends Seeder
             'password' => 'secretsecret',
         ]);
 
-        $bot = Bot::factory()->for($abrar->currentTeam)->create([
+        $agent = Agent::factory()->for($abrar->currentTeam)->create([
             'name' => 'Abrar.pro Assistant',
             'embed_origins' => ['https://www.abrar.pro'],
             'status' => 'active',
         ]);
 
-        Document::factory()->for($bot)->create([
+        Document::factory()->for($agent)->create([
             'type' => 'web',
             'source_url' => 'https://www.abrar.pro/',
             'title' => 'Abrar.pro',

@@ -14,5 +14,5 @@ enum TeamPermission: string
     case CreateInvitation = 'invitation:create';
     case CancelInvitation = 'invitation:cancel';
 
-    case ManageBots = 'bot:manage';
+    case ManageAgents = 'agent:manage';
 }

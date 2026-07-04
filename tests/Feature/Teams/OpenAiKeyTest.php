@@ -3,7 +3,7 @@
 use App\Ai\Exceptions\MissingOpenAiKeyException;
 use App\Ai\Support\ResolvesTenantKey;
 use App\Enums\TeamRole;
-use App\Models\Bot;
+use App\Models\Agent;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -91,34 +91,34 @@ it('forbids non-managers from setting the key', function () {
         ->assertForbidden();
 });
 
-it('resolves the bot override before the team key', function () {
+it('resolves the agent override before the team key', function () {
     $team = Team::factory()->create(['openai_api_key' => 'sk-team-key']);
-    $bot = Bot::factory()->for($team)->create(['openai_api_key' => 'sk-bot-key']);
+    $agent = Agent::factory()->for($team)->create(['openai_api_key' => 'sk-agent-key']);
 
-    expect(app(ResolvesTenantKey::class)->resolveOpenAiKey($bot))->toBe('sk-bot-key');
+    expect(app(ResolvesTenantKey::class)->resolveOpenAiKey($agent))->toBe('sk-agent-key');
 });
 
-it('falls back to the team key when the bot has no override', function () {
+it('falls back to the team key when the agent has no override', function () {
     $team = Team::factory()->create(['openai_api_key' => 'sk-team-key']);
-    $bot = Bot::factory()->for($team)->create(['openai_api_key' => null]);
+    $agent = Agent::factory()->for($team)->create(['openai_api_key' => null]);
 
-    expect(app(ResolvesTenantKey::class)->resolveOpenAiKey($bot))->toBe('sk-team-key');
+    expect(app(ResolvesTenantKey::class)->resolveOpenAiKey($agent))->toBe('sk-team-key');
 });
 
 it('throws a typed exception when no key is configured', function () {
     $team = Team::factory()->create(['openai_api_key' => null]);
-    $bot = Bot::factory()->for($team)->create(['openai_api_key' => null]);
+    $agent = Agent::factory()->for($team)->create(['openai_api_key' => null]);
 
-    app(ResolvesTenantKey::class)->resolveOpenAiKey($bot);
+    app(ResolvesTenantKey::class)->resolveOpenAiKey($agent);
 })->throws(MissingOpenAiKeyException::class);
 
 it('applies the tenant key to the AI SDK config only within the callback scope', function () {
     config(['ai.providers.openai.key' => 'sk-platform-default']);
 
     $team = Team::factory()->create(['openai_api_key' => 'sk-tenant-key']);
-    $bot = Bot::factory()->for($team)->create(['openai_api_key' => null]);
+    $agent = Agent::factory()->for($team)->create(['openai_api_key' => null]);
 
-    $seenInside = app(ResolvesTenantKey::class)->withTenantKey($bot, function () {
+    $seenInside = app(ResolvesTenantKey::class)->withTenantKey($agent, function () {
         return config('ai.providers.openai.key');
     });
 

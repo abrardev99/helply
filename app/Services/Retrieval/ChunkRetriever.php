@@ -5,7 +5,7 @@ namespace App\Services\Retrieval;
 use App\Ai\Support\ResolvesTenantKey;
 use App\Data\RetrievalHit;
 use App\Data\RetrievalResult;
-use App\Models\Bot;
+use App\Models\Agent;
 use App\Models\Chunk;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
@@ -27,7 +27,7 @@ class ChunkRetriever
      * the candidates to the top-N. Reranking degrades gracefully to vector order when no
      * rerank provider key is configured.
      */
-    public function retrieve(Bot $bot, string $question, int $candidates = 25, int $topN = 6): RetrievalResult
+    public function retrieve(Agent $agent, string $question, int $candidates = 25, int $topN = 6): RetrievalResult
     {
         $question = trim($question);
 
@@ -35,16 +35,16 @@ class ChunkRetriever
             return RetrievalResult::empty();
         }
 
-        $queryEmbedding = $this->keys->withTenantKey($bot, fn (): array => Embeddings::for([$question])
+        $queryEmbedding = $this->keys->withTenantKey($agent, fn (): array => Embeddings::for([$question])
             ->dimensions(1536)
-            ->generate(Lab::OpenAI, $bot->embedding_model)
+            ->generate(Lab::OpenAI, $agent->embedding_model)
             ->embeddings[0]);
 
-        // TENANT SAFETY: bot_id is filtered first and always — chunks never cross tenants.
+        // TENANT SAFETY: agent_id is filtered first and always — chunks never cross tenants.
         $candidateChunks = Chunk::query()
             ->select('chunks.*')
             ->selectVectorDistance('embedding', $queryEmbedding, 'distance')
-            ->where('bot_id', $bot->id)
+            ->where('agent_id', $agent->id)
             ->whereNotNull('embedding')
             ->orderByVectorDistance('embedding', $queryEmbedding)
             ->limit($candidates)

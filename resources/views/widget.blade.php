@@ -10,14 +10,14 @@
         try { base = new URL(script.src).origin; } catch (e) { base = ''; }
     }
 
-    var botId = script ? script.getAttribute('data-bot-id') : null;
+    var agentId = script ? script.getAttribute('data-agent-id') : null;
 
-    if (!botId) {
-        console.error('[helply] widget script is missing data-bot-id');
+    if (!agentId) {
+        console.error('[helply] widget script is missing data-agent-id');
         return;
     }
 
-    var SESSION_KEY = 'helply_session_' + botId;
+    var SESSION_KEY = 'helply_session_' + agentId;
 
     function sessionId() {
         var id = null;
@@ -32,7 +32,7 @@
     }
 
     var host = document.createElement('div');
-    host.setAttribute('data-helply-widget', botId);
+    host.setAttribute('data-helply-widget', agentId);
     document.body.appendChild(host);
 
     var root = host.attachShadow ? host.attachShadow({ mode: 'open' }) : host;
@@ -45,7 +45,7 @@
         + '.msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}'
         + '.msg{padding:8px 10px;border-radius:10px;font-size:14px;line-height:1.4;max-width:85%;white-space:pre-wrap;word-wrap:break-word}'
         + '.user{align-self:flex-end;background:#4f46e5;color:#fff}'
-        + '.bot{align-self:flex-start;background:#f1f5f9;color:#0f172a}'
+        + '.agent{align-self:flex-start;background:#f1f5f9;color:#0f172a}'
         + '.form{display:flex;border-top:1px solid #e2e8f0}'
         + '.input{flex:1;border:0;padding:12px;font-size:14px;outline:none}'
         + '.send{border:0;background:#4f46e5;color:#fff;padding:0 16px;cursor:pointer;font-size:14px}';
@@ -77,7 +77,7 @@
 
     function addMessage(role, text) {
         var el = document.createElement('div');
-        el.className = 'msg ' + (role === 'user' ? 'user' : 'bot');
+        el.className = 'msg ' + (role === 'user' ? 'user' : 'agent');
         el.textContent = text;
         msgs.appendChild(el);
         msgs.scrollTop = msgs.scrollHeight;
@@ -86,9 +86,9 @@
 
     function send(text) {
         addMessage('user', text);
-        var pending = addMessage('bot', '...');
+        var pending = addMessage('agent', '...');
 
-        fetch(base + '/api/widget/' + botId + '/chat', {
+        fetch(base + '/api/widget/' + agentId + '/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
             body: JSON.stringify({ session_id: sessionId(), message: text })

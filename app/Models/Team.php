@@ -26,7 +26,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, TeamInvitation> $invitations
  * @property-read Collection<int, Membership> $memberships
  * @property-read Collection<int, User> $members
- * @property-read Collection<int, Bot> $bots
+ * @property-read Collection<int, Agent> $agents
  */
 #[Fillable(['name', 'slug', 'is_personal'])]
 class Team extends Model
@@ -108,13 +108,13 @@ class Team extends Model
     }
 
     /**
-     * Get all bots for this team.
+     * Get all agents for this team.
      *
-     * @return HasMany<Bot, $this>
+     * @return HasMany<Agent, $this>
      */
-    public function bots(): HasMany
+    public function agents(): HasMany
     {
-        return $this->hasMany(Bot::class);
+        return $this->hasMany(Agent::class);
     }
 
     /**

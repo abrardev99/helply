@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import {FolderGit2, LayoutGrid, Bot} from 'lucide-react';
+import { Bot, FolderGit2, LayoutGrid, Users } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -15,7 +15,8 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import { index as botsIndex } from '@/routes/bots';
+import { index as agentsIndex } from '@/routes/agents';
+import { index as teamsIndex } from '@/routes/teams';
 import type { NavItem } from '@/types';
 
 export function AppSidebar() {
@@ -31,9 +32,16 @@ export function AppSidebar() {
             icon: LayoutGrid,
         },
         {
-            title: 'Bot',
-            href: page.props.currentTeam ? botsIndex(page.props.currentTeam.slug).url : '/',
-            'icon': Bot
+            title: 'Agents',
+            href: page.props.currentTeam
+                ? agentsIndex(page.props.currentTeam.slug).url
+                : '/',
+            icon: Bot,
+        },
+        {
+            title: 'Teams',
+            href: teamsIndex().url,
+            icon: Users,
         },
     ];
 

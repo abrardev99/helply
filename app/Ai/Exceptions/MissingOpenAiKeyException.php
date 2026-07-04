@@ -2,13 +2,13 @@
 
 namespace App\Ai\Exceptions;
 
-use App\Models\Bot;
+use App\Models\Agent;
 use RuntimeException;
 
 class MissingOpenAiKeyException extends RuntimeException
 {
-    public function __construct(public readonly Bot $bot)
+    public function __construct(public readonly Agent $agent)
     {
-        parent::__construct("No OpenAI API key is configured for bot [{$bot->id}] or its team.");
+        parent::__construct("No OpenAI API key is configured for agent [{$agent->id}] or its team.");
     }
 }

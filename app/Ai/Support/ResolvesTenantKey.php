@@ -3,22 +3,22 @@
 namespace App\Ai\Support;
 
 use App\Ai\Exceptions\MissingOpenAiKeyException;
-use App\Models\Bot;
+use App\Models\Agent;
 use Closure;
 
 class ResolvesTenantKey
 {
     /**
-     * Resolve the OpenAI key that a bot should use, preferring a per-bot override and
+     * Resolve the OpenAI key that a agent should use, preferring a per-agent override and
      * falling back to the team key. Throws when neither is set so callers can surface a
      * clear "needs key" state rather than making a doomed API call.
      */
-    public function resolveOpenAiKey(Bot $bot): string
+    public function resolveOpenAiKey(Agent $agent): string
     {
-        $key = $bot->openai_api_key ?: $bot->team->openai_api_key;
+        $key = $agent->openai_api_key ?: $agent->team->openai_api_key;
 
         if (blank($key)) {
-            throw new MissingOpenAiKeyException($bot);
+            throw new MissingOpenAiKeyException($agent);
         }
 
         return $key;
@@ -37,9 +37,9 @@ class ResolvesTenantKey
      * @param  Closure(): TReturn  $callback
      * @return TReturn
      */
-    public function withTenantKey(Bot $bot, Closure $callback): mixed
+    public function withTenantKey(Agent $agent, Closure $callback): mixed
     {
-        $key = $this->resolveOpenAiKey($bot);
+        $key = $this->resolveOpenAiKey($agent);
 
         $previous = config('ai.providers.openai.key');
 

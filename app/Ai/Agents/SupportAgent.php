@@ -2,24 +2,24 @@
 
 namespace App\Ai\Agents;
 
-use App\Models\Bot;
-use Laravel\Ai\Contracts\Agent;
+use App\Models\Agent;
+use Laravel\Ai\Contracts\Agent as AiAgent;
 use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Promptable;
 use Stringable;
 
-class SupportAgent implements Agent, Conversational
+class SupportAgent implements AiAgent, Conversational
 {
     use Promptable;
 
     /**
-     * @param  Bot  $bot  The bot being answered for (supplies its custom system prompt).
+     * @param  Agent  $agent  The agent being answered for (supplies its custom system prompt).
      * @param  string  $context  The packed, citation-marked chunk text to ground answers in.
      * @param  list<array{role: string, content: string}>  $history  Prior conversation turns.
      */
     public function __construct(
-        private Bot $bot,
+        private Agent $agent,
         private string $context,
         private array $history = [],
     ) {}
@@ -41,10 +41,10 @@ class SupportAgent implements Agent, Conversational
             'were given any context. Cite the sources you use with their [n] markers.',
         ]);
 
-        $custom = trim((string) $this->bot->system_prompt);
+        $custom = trim((string) $this->agent->system_prompt);
 
         if ($custom !== '') {
-            $instructions .= "\n\nAdditional guidance for this bot:\n".$custom;
+            $instructions .= "\n\nAdditional guidance for this agent:\n".$custom;
         }
 
         return $instructions."\n\nCONTEXT:\n".$this->context;

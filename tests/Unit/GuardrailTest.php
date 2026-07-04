@@ -3,7 +3,7 @@
 use App\Ai\Support\ResolvesTenantKey;
 use App\Data\RetrievalHit;
 use App\Data\RetrievalResult;
-use App\Models\Bot;
+use App\Models\Agent;
 use App\Services\Chat\Guardrail;
 
 function guardrail(): Guardrail
@@ -11,12 +11,12 @@ function guardrail(): Guardrail
     return new Guardrail(new ResolvesTenantKey);
 }
 
-function botWithThreshold(float $threshold): Bot
+function agentWithThreshold(float $threshold): Agent
 {
-    $bot = new Bot;
-    $bot->confidence_threshold = $threshold;
+    $agent = new Agent;
+    $agent->confidence_threshold = $threshold;
 
-    return $bot;
+    return $agent;
 }
 
 function resultWithScore(float $score): RetrievalResult
@@ -29,19 +29,19 @@ function resultWithScore(float $score): RetrievalResult
 }
 
 it('passes the relevance gate only when the top score clears the threshold', function () {
-    $bot = botWithThreshold(0.75);
+    $agent = agentWithThreshold(0.75);
 
-    expect(guardrail()->passesRelevanceGate(resultWithScore(0.9), $bot))->toBeTrue()
-        ->and(guardrail()->passesRelevanceGate(resultWithScore(0.5), $bot))->toBeFalse();
+    expect(guardrail()->passesRelevanceGate(resultWithScore(0.9), $agent))->toBeTrue()
+        ->and(guardrail()->passesRelevanceGate(resultWithScore(0.5), $agent))->toBeFalse();
 });
 
 it('fails the relevance gate when there are no hits', function () {
-    expect(guardrail()->passesRelevanceGate(RetrievalResult::empty(), botWithThreshold(0.75)))->toBeFalse();
+    expect(guardrail()->passesRelevanceGate(RetrievalResult::empty(), agentWithThreshold(0.75)))->toBeFalse();
 });
 
 it('treats a model refusal as grounded without calling the checker', function () {
     $grounded = guardrail()->answerIsGrounded(
-        botWithThreshold(0.75),
+        agentWithThreshold(0.75),
         "I'm sorry, but I don't have that information in our content.",
         resultWithScore(0.9),
     );
@@ -50,6 +50,6 @@ it('treats a model refusal as grounded without calling the checker', function ()
 });
 
 it('is not grounded for an empty answer or empty context', function () {
-    expect(guardrail()->answerIsGrounded(botWithThreshold(0.75), '', resultWithScore(0.9)))->toBeFalse()
-        ->and(guardrail()->answerIsGrounded(botWithThreshold(0.75), 'An answer.', RetrievalResult::empty()))->toBeFalse();
+    expect(guardrail()->answerIsGrounded(agentWithThreshold(0.75), '', resultWithScore(0.9)))->toBeFalse()
+        ->and(guardrail()->answerIsGrounded(agentWithThreshold(0.75), 'An answer.', RetrievalResult::empty()))->toBeFalse();
 });

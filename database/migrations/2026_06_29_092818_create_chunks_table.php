@@ -16,7 +16,7 @@ return new class extends Migration
 
         Schema::create('chunks', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('bot_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('agent_id')->constrained()->cascadeOnDelete();
             $table->foreignUuid('document_id')->constrained()->cascadeOnDelete();
             $table->text('content');
             // Embeddings are generated in a later phase; allow NULL so a page's text can

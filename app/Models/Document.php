@@ -15,14 +15,14 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property string $id
- * @property string $bot_id
+ * @property string $agent_id
  * @property DocumentType $type
  * @property string|null $source_url
  * @property string|null $title
  * @property DocumentStatus $status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read Bot $bot
+ * @property-read Agent $agent
  * @property-read Collection<int, Chunk> $chunks
  */
 class Document extends Model
@@ -31,13 +31,13 @@ class Document extends Model
     use HasFactory, HasUuids;
 
     /**
-     * Get the bot that owns the document.
+     * Get the agent that owns the document.
      *
-     * @return BelongsTo<Bot, $this>
+     * @return BelongsTo<Agent, $this>
      */
-    public function bot(): BelongsTo
+    public function agent(): BelongsTo
     {
-        return $this->belongsTo(Bot::class);
+        return $this->belongsTo(Agent::class);
     }
 
     /**

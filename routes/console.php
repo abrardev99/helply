@@ -10,7 +10,7 @@ Schedule::call(function () {
         ->delete();
 })->daily()->description('Delete expired team invitations');
 
-// Kick off ingestion crawls for bots with pending documents. withoutOverlapping() stops
+// Kick off ingestion crawls for agents with pending documents. withoutOverlapping() stops
 // a slow run from being launched twice; the command itself claims rows (pending ->
 // processing) so it never re-dispatches a crawl that is already queued or running.
 Schedule::command('documents:queue-pending')

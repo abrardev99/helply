@@ -4,7 +4,7 @@ namespace App\Actions\Chat;
 
 use App\Data\WidgetChatResponse;
 use App\Enums\MessageRole;
-use App\Models\Bot;
+use App\Models\Agent;
 use App\Models\Message;
 use App\Services\Chat\ChatPipeline;
 use Illuminate\Support\Str;
@@ -21,11 +21,11 @@ class HandleChatMessage
      * pipeline, persist the assistant reply (with sources, retrieval score, flagged), and
      * return the visitor-facing response.
      */
-    public function handle(Bot $bot, ?string $sessionId, string $message): WidgetChatResponse
+    public function handle(Agent $agent, ?string $sessionId, string $message): WidgetChatResponse
     {
         $sessionId = $sessionId ?: (string) Str::uuid();
 
-        $conversation = $bot->conversations()->firstOrCreate(['session_id' => $sessionId]);
+        $conversation = $agent->conversations()->firstOrCreate(['session_id' => $sessionId]);
 
         // Prior turns, captured before this question is stored, for follow-up context.
         $history = $conversation->messages()
@@ -42,7 +42,7 @@ class HandleChatMessage
             'content' => $message,
         ]);
 
-        $result = $this->pipeline->handle($bot, $message, $history);
+        $result = $this->pipeline->handle($agent, $message, $history);
 
         $conversation->messages()->create([
             'role' => MessageRole::Assistant,

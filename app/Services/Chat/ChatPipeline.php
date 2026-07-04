@@ -5,7 +5,7 @@ namespace App\Services\Chat;
 use App\Ai\AnswerGenerator;
 use App\Data\ChatResult;
 use App\Enums\ChatOutcome;
-use App\Models\Bot;
+use App\Models\Agent;
 use App\Services\Retrieval\ChunkRetriever;
 
 class ChatPipeline
@@ -28,18 +28,18 @@ class ChatPipeline
      *
      * @param  list<array{role: string, content: string}>  $history
      */
-    public function handle(Bot $bot, string $question, array $history = []): ChatResult
+    public function handle(Agent $agent, string $question, array $history = []): ChatResult
     {
-        $retrieval = $this->retriever->retrieve($bot, $question);
+        $retrieval = $this->retriever->retrieve($agent, $question);
 
-        if (! $this->guardrail->passesRelevanceGate($retrieval, $bot)) {
-            return $this->refusal($bot, ChatOutcome::RefusedLowRelevance, $retrieval->topScore);
+        if (! $this->guardrail->passesRelevanceGate($retrieval, $agent)) {
+            return $this->refusal($agent, ChatOutcome::RefusedLowRelevance, $retrieval->topScore);
         }
 
-        $generated = $this->generator->generate($bot, $question, $retrieval, $history);
+        $generated = $this->generator->generate($agent, $question, $retrieval, $history);
 
-        if (! $this->guardrail->answerIsGrounded($bot, $generated->answer, $retrieval)) {
-            return $this->refusal($bot, ChatOutcome::RefusedUngrounded, $retrieval->topScore);
+        if (! $this->guardrail->answerIsGrounded($agent, $generated->answer, $retrieval)) {
+            return $this->refusal($agent, ChatOutcome::RefusedUngrounded, $retrieval->topScore);
         }
 
         return new ChatResult(
@@ -51,10 +51,10 @@ class ChatPipeline
         );
     }
 
-    private function refusal(Bot $bot, ChatOutcome $outcome, float $score): ChatResult
+    private function refusal(Agent $agent, ChatOutcome $outcome, float $score): ChatResult
     {
         return new ChatResult(
-            answer: $this->guardrail->refusalMessage($bot),
+            answer: $this->guardrail->refusalMessage($agent),
             outcome: $outcome,
             sources: [],
             retrievalScore: $score,

@@ -5,7 +5,7 @@ namespace App\Services\Chat;
 use App\Ai\Agents\GroundingChecker;
 use App\Ai\Support\ResolvesTenantKey;
 use App\Data\RetrievalResult;
-use App\Models\Bot;
+use App\Models\Agent;
 use Illuminate\Support\Str;
 use Laravel\Ai\Enums\Lab;
 
@@ -31,18 +31,18 @@ class Guardrail
 
     /**
      * Guardrail #1 — relevance gate (no LLM call). Passes only when the retrieval found
-     * usable chunks whose top score clears the bot's confidence threshold.
+     * usable chunks whose top score clears the agent's confidence threshold.
      */
-    public function passesRelevanceGate(RetrievalResult $retrieval, Bot $bot): bool
+    public function passesRelevanceGate(RetrievalResult $retrieval, Agent $agent): bool
     {
-        return $retrieval->hits !== [] && $retrieval->topScore >= $bot->confidence_threshold;
+        return $retrieval->hits !== [] && $retrieval->topScore >= $agent->confidence_threshold;
     }
 
     /**
      * Guardrail #2 — grounding check. Cheap heuristics first, then a structured-output
      * agent that decides whether the answer is fully supported by the retrieved context.
      */
-    public function answerIsGrounded(Bot $bot, string $answer, RetrievalResult $retrieval): bool
+    public function answerIsGrounded(Agent $agent, string $answer, RetrievalResult $retrieval): bool
     {
         $answer = trim($answer);
 
@@ -54,8 +54,8 @@ class Guardrail
             return true;
         }
 
-        $verdict = $this->keys->withTenantKey($bot, fn () => (new GroundingChecker)
-            ->prompt($this->groundingPrompt($answer, $retrieval), provider: Lab::OpenAI, model: $bot->chat_model));
+        $verdict = $this->keys->withTenantKey($agent, fn () => (new GroundingChecker)
+            ->prompt($this->groundingPrompt($answer, $retrieval), provider: Lab::OpenAI, model: $agent->chat_model));
 
         return (bool) ($verdict['grounded'] ?? false);
     }
@@ -63,10 +63,10 @@ class Guardrail
     /**
      * Friendly, translatable refusal shown when a guardrail blocks an answer.
      */
-    public function refusalMessage(Bot $bot): string
+    public function refusalMessage(Agent $agent): string
     {
-        return __("I can only help with questions about :bot, and I couldn't find anything about that in our content.", [
-            'bot' => $bot->name,
+        return __("I can only help with questions about :agent, and I couldn't find anything about that in our content.", [
+            'agent' => $agent->name,
         ]);
     }
 

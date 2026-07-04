@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Bot;
+use App\Models\Agent;
 use App\Models\Conversation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -19,7 +19,7 @@ class ConversationFactory extends Factory
     public function definition(): array
     {
         return [
-            'bot_id' => Bot::factory(),
+            'agent_id' => Agent::factory(),
             'session_id' => fake()->uuid(),
         ];
     }

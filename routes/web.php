@@ -1,12 +1,12 @@
 <?php
 
-use App\Http\Controllers\Bots\BotController;
-use App\Http\Controllers\Bots\ConversationsController;
-use App\Http\Controllers\Bots\DocumentController;
-use App\Http\Controllers\Bots\PdfSourceController;
-use App\Http\Controllers\Bots\RecrawlBotController;
-use App\Http\Controllers\Bots\ReembedController;
-use App\Http\Controllers\Bots\WebsiteSourceController;
+use App\Http\Controllers\Agents\AgentController;
+use App\Http\Controllers\Agents\ConversationsController;
+use App\Http\Controllers\Agents\DocumentController;
+use App\Http\Controllers\Agents\PdfSourceController;
+use App\Http\Controllers\Agents\RecrawlAgentController;
+use App\Http\Controllers\Agents\ReembedController;
+use App\Http\Controllers\Agents\WebsiteSourceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Controllers\WidgetScriptController;
@@ -22,16 +22,16 @@ Route::prefix('{current_team}')
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
 
-        Route::resource('bots', BotController::class);
+        Route::resource('agents', AgentController::class);
 
-        Route::post('bots/{bot}/sources', [WebsiteSourceController::class, 'store'])->name('bots.sources.store');
-        Route::post('bots/{bot}/pdfs', [PdfSourceController::class, 'store'])->name('bots.pdfs.store');
-        Route::post('bots/{bot}/recrawl', RecrawlBotController::class)->name('bots.recrawl');
-        Route::post('bots/{bot}/reembed', ReembedController::class)->name('bots.reembed');
-        Route::delete('bots/{bot}/documents/{document}', [DocumentController::class, 'destroy'])->name('bots.documents.destroy');
+        Route::post('agents/{agent}/sources', [WebsiteSourceController::class, 'store'])->name('agents.sources.store');
+        Route::post('agents/{agent}/pdfs', [PdfSourceController::class, 'store'])->name('agents.pdfs.store');
+        Route::post('agents/{agent}/recrawl', RecrawlAgentController::class)->name('agents.recrawl');
+        Route::post('agents/{agent}/reembed', ReembedController::class)->name('agents.reembed');
+        Route::delete('agents/{agent}/documents/{document}', [DocumentController::class, 'destroy'])->name('agents.documents.destroy');
 
-        Route::get('bots/{bot}/conversations', [ConversationsController::class, 'index'])->name('bots.conversations.index');
-        Route::get('bots/{bot}/conversations/{conversation}', [ConversationsController::class, 'show'])->name('bots.conversations.show');
+        Route::get('agents/{agent}/conversations', [ConversationsController::class, 'index'])->name('agents.conversations.index');
+        Route::get('agents/{agent}/conversations/{conversation}', [ConversationsController::class, 'show'])->name('agents.conversations.show');
     });
 
 Route::middleware(['auth'])->group(function () {

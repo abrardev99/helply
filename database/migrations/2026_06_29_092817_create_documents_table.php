@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('documents', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('bot_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('agent_id')->constrained()->cascadeOnDelete();
             $table->string('type');
             $table->string('source_url')->nullable();
             $table->string('title')->nullable();

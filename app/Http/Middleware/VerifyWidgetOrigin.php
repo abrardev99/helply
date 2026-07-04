@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Bot;
+use App\Models\Agent;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 class VerifyWidgetOrigin
 {
     /**
-     * Reject widget requests whose Origin/Referer is not in the bot's allow-list, and
+     * Reject widget requests whose Origin/Referer is not in the agent's allow-list, and
      * reflect only an allow-listed origin back in the CORS headers.
      *
      * Note: Origin is browser-enforced, not a hard security boundary (a script can forge
@@ -19,13 +19,13 @@ class VerifyWidgetOrigin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $bot = $request->route('bot');
+        $agent = $request->route('agent');
 
         $origin = $this->requestOrigin($request);
-        $allowed = $bot instanceof Bot ? ($bot->embed_origins ?? []) : [];
+        $allowed = $agent instanceof Agent ? ($agent->embed_origins ?? []) : [];
 
         if ($origin === null || ! in_array($origin, $allowed, true)) {
-            abort(403, __('This origin is not allowed to use this bot.'));
+            abort(403, __('This origin is not allowed to use this agent.'));
         }
 
         $response = $next($request);

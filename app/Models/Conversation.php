@@ -15,13 +15,13 @@ class Conversation extends Model
     use HasFactory, HasUuids;
 
     /**
-     * Get the bot that owns the conversation.
+     * Get the agent that owns the conversation.
      *
-     * @return BelongsTo<Bot, $this>
+     * @return BelongsTo<Agent, $this>
      */
-    public function bot(): BelongsTo
+    public function agent(): BelongsTo
     {
-        return $this->belongsTo(Bot::class);
+        return $this->belongsTo(Agent::class);
     }
 
     /**

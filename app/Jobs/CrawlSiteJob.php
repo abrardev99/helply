@@ -44,11 +44,11 @@ class CrawlSiteJob implements ShouldQueue
     private const MAX_PAGES = 200;
 
     /**
-     * @param  string  $botId  The owning bot (UUID).
+     * @param  string  $agentId  The owning agent (UUID).
      * @param  string  $seedUrl  Any URL on the target site; used to locate sitemap.xml.
      */
     public function __construct(
-        public string $botId,
+        public string $agentId,
         public string $seedUrl,
     ) {}
 
@@ -82,7 +82,7 @@ class CrawlSiteJob implements ShouldQueue
 
         if ($pageUrls->count() > self::MAX_PAGES) {
             Log::warning('CrawlSiteJob truncated an oversized sitemap.', [
-                'bot_id' => $this->botId,
+                'agent_id' => $this->agentId,
                 'discovered' => $pageUrls->count(),
                 'limit' => self::MAX_PAGES,
             ]);
@@ -99,7 +99,7 @@ class CrawlSiteJob implements ShouldQueue
         // seed(s) to 'failed' so they don't sit in 'processing' forever.
         if ($pageUrls->count() <= 1) {
             Log::warning('CrawlSiteJob found no sitemap URLs.', [
-                'bot_id' => $this->botId,
+                'agent_id' => $this->agentId,
                 'sitemap_url' => $sitemapUrl,
             ]);
 
@@ -108,11 +108,11 @@ class CrawlSiteJob implements ShouldQueue
             return;
         }
 
-        // Idempotent on (bot_id, source_url): create a document per discovered URL only
+        // Idempotent on (agent_id, source_url): create a document per discovered URL only
         // when it does not already exist. Existing rows (e.g. already 'done') are left
         // untouched here and re-affirmed to 'processing' in the bulk update below.
         $documents = $pageUrls->map(fn (string $url): Document => Document::query()->firstOrCreate(
-            ['bot_id' => $this->botId, 'source_url' => $url],
+            ['agent_id' => $this->agentId, 'source_url' => $url],
             ['type' => DocumentType::Web, 'status' => DocumentStatus::Pending],
         ));
 
@@ -150,7 +150,7 @@ class CrawlSiteJob implements ShouldQueue
             ->all();
 
         Bus::batch($pageJobs)
-            ->name("crawl:{$this->botId}")
+            ->name("crawl:{$this->agentId}")
             ->allowFailures()
             ->then(function (Batch $batch): void {
                 // Optional: the crawl finished. (Avoid $this here — batch callbacks are
@@ -182,7 +182,7 @@ class CrawlSiteJob implements ShouldQueue
 
         if ($response->failed()) {
             Log::warning('CrawlSiteJob could not fetch sitemap.', [
-                'bot_id' => $this->botId,
+                'agent_id' => $this->agentId,
                 'sitemap_url' => $sitemapUrl,
                 'status' => $response->status(),
             ]);
@@ -271,12 +271,12 @@ class CrawlSiteJob implements ShouldQueue
     }
 
     /**
-     * Move this bot's claimed (processing) documents to 'failed'.
+     * Move this agent's claimed (processing) documents to 'failed'.
      */
     private function markProcessingAsFailed(): void
     {
         Document::query()
-            ->where('bot_id', $this->botId)
+            ->where('agent_id', $this->agentId)
             ->where('status', DocumentStatus::Processing)
             ->update(['status' => DocumentStatus::Failed]);
     }
