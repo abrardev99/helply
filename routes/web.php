@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Bots\BotController;
+use App\Http\Controllers\Bots\ConversationsController;
 use App\Http\Controllers\Bots\DocumentController;
 use App\Http\Controllers\Bots\PdfSourceController;
 use App\Http\Controllers\Bots\RecrawlBotController;
@@ -25,6 +26,9 @@ Route::prefix('{current_team}')
         Route::post('bots/{bot}/recrawl', RecrawlBotController::class)->name('bots.recrawl');
         Route::post('bots/{bot}/reembed', ReembedController::class)->name('bots.reembed');
         Route::delete('bots/{bot}/documents/{document}', [DocumentController::class, 'destroy'])->name('bots.documents.destroy');
+
+        Route::get('bots/{bot}/conversations', [ConversationsController::class, 'index'])->name('bots.conversations.index');
+        Route::get('bots/{bot}/conversations/{conversation}', [ConversationsController::class, 'show'])->name('bots.conversations.show');
     });
 
 Route::middleware(['auth'])->group(function () {

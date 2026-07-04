@@ -1,5 +1,5 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
-import { Pencil, RefreshCw, Trash2 } from 'lucide-react';
+import { MessagesSquare, Pencil, RefreshCw, Trash2 } from 'lucide-react';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { edit, index, recrawl, reembed, show } from '@/routes/bots';
+import conversations from '@/routes/bots/conversations';
 import documents from '@/routes/bots/documents';
 import pdfs from '@/routes/bots/pdfs';
 import sources from '@/routes/bots/sources';
@@ -55,18 +56,31 @@ export default function BotsShow({
                         </Badge>
                     </div>
 
-                    {permissions.canManageBots ? (
-                        <Button asChild data-test="bot-edit-button">
+                    <div className="flex gap-2">
+                        <Button asChild variant="secondary" data-test="bot-conversations-button">
                             <Link
-                                href={edit({
+                                href={conversations.index({
                                     current_team: currentTeam.slug,
                                     bot: bot.id,
                                 })}
                             >
-                                <Pencil /> Edit bot
+                                <MessagesSquare /> Conversations
                             </Link>
                         </Button>
-                    ) : null}
+
+                        {permissions.canManageBots ? (
+                            <Button asChild data-test="bot-edit-button">
+                                <Link
+                                    href={edit({
+                                        current_team: currentTeam.slug,
+                                        bot: bot.id,
+                                    })}
+                                >
+                                    <Pencil /> Edit bot
+                                </Link>
+                            </Button>
+                        ) : null}
+                    </div>
                 </div>
 
                 <div className="space-y-3">

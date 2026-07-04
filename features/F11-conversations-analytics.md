@@ -1,6 +1,6 @@
 # F11 — Conversations & Analytics
 
-**Phase:** 3 · **Status:** ⛔ todo · **Depends on:** F07
+**Phase:** 3 · **Status:** ✅ done · **Depends on:** F07
 
 ## Goal
 
