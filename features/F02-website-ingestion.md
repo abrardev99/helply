@@ -1,6 +1,6 @@
 # F02 — Website Ingestion (Sitemap Crawl)
 
-**Phase:** 1 · **Status:** 🟡 partial · **Depends on:** F01
+**Phase:** 1 · **Status:** ✅ done · **Depends on:** F01
 
 ## Goal
 

@@ -4,12 +4,14 @@ namespace App\Jobs;
 
 use App\Enums\DocumentStatus;
 use App\Models\Document;
+use App\Support\SafeUrl;
 use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use RuntimeException;
 use Throwable;
 
 class ProcessPageJob implements ShouldQueue
@@ -25,6 +27,12 @@ class ProcessPageJob implements ShouldQueue
      * HTML elements whose text is chrome, not page content.
      */
     private const NON_CONTENT_TAGS = ['script', 'style', 'noscript', 'template', 'nav', 'header', 'footer', 'aside', 'form', 'svg'];
+
+    /**
+     * Largest page body we will parse (2 MiB). Anything beyond this is truncated before
+     * DOM parsing to bound memory use on pathological pages.
+     */
+    private const MAX_PAGE_BYTES = 2_097_152;
 
     public function __construct(
         public string $documentId,
@@ -56,6 +64,12 @@ class ProcessPageJob implements ShouldQueue
         try {
             $document->update(['status' => DocumentStatus::Processing]);
 
+            // Defense-in-depth SSRF guard: refuse to fetch a page whose host is a
+            // private/loopback/link-local IP literal or a non-http(s) scheme.
+            if (! SafeUrl::hasSafeTarget((string) $document->source_url)) {
+                throw new RuntimeException("Refusing to fetch unsafe URL: {$document->source_url}");
+            }
+
             $response = Http::timeout(20)
                 ->connectTimeout(5)
                 ->retry(2, 300, throw: false)
@@ -65,7 +79,7 @@ class ProcessPageJob implements ShouldQueue
             // handling below (status => failed, then rethrow for the batch).
             $response->throw();
 
-            $extracted = $this->extractReadableText($response->body());
+            $extracted = $this->extractReadableText(substr($response->body(), 0, self::MAX_PAGE_BYTES));
 
             // IDEMPOTENT delete-before-insert: a retry (or a later re-crawl) must not
             // duplicate chunks for this page. For this stage one page == exactly one

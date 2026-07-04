@@ -1,9 +1,14 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import { Pencil } from 'lucide-react';
+import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { Pencil, RefreshCw, Trash2 } from 'lucide-react';
 import Heading from '@/components/heading';
+import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { edit, index, show } from '@/routes/bots';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { edit, index, recrawl, show } from '@/routes/bots';
+import documents from '@/routes/bots/documents';
+import sources from '@/routes/bots/sources';
 import type { Bot, BotDocument, BotPermissions } from '@/types';
 
 type Props = {
@@ -12,7 +17,18 @@ type Props = {
     permissions: BotPermissions;
 };
 
-export default function BotsShow({ bot, documents, permissions }: Props) {
+const statusVariant: Record<string, 'default' | 'secondary' | 'destructive'> = {
+    done: 'default',
+    processing: 'secondary',
+    pending: 'secondary',
+    failed: 'destructive',
+};
+
+export default function BotsShow({
+    bot,
+    documents: botDocuments,
+    permissions,
+}: Props) {
     const currentTeam = usePage().props.currentTeam;
 
     if (!currentTeam) {
@@ -29,9 +45,7 @@ export default function BotsShow({ bot, documents, permissions }: Props) {
                         <Heading title={bot.name} />
                         <Badge
                             variant={
-                                bot.status === 'active'
-                                    ? 'default'
-                                    : 'secondary'
+                                bot.status === 'active' ? 'default' : 'secondary'
                             }
                         >
                             {bot.status_label}
@@ -72,15 +86,83 @@ export default function BotsShow({ bot, documents, permissions }: Props) {
                     )}
                 </div>
 
+                {permissions.canManageBots ? (
+                    <div className="space-y-3">
+                        <Heading
+                            variant="small"
+                            title="Add a website"
+                            description="We'll crawl the site's sitemap.xml and ingest each page."
+                        />
+
+                        <Form
+                            {...sources.store.form({
+                                current_team: currentTeam.slug,
+                                bot: bot.id,
+                            })}
+                            resetOnSuccess
+                            className="flex max-w-xl items-start gap-2"
+                        >
+                            {({ errors, processing }) => (
+                                <div className="flex-1 space-y-2">
+                                    <Label htmlFor="url" className="sr-only">
+                                        Website URL
+                                    </Label>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            id="url"
+                                            name="url"
+                                            type="url"
+                                            data-test="website-url-input"
+                                            placeholder="https://docs.example.com"
+                                            required
+                                        />
+                                        <Button
+                                            type="submit"
+                                            data-test="add-website-button"
+                                            disabled={processing}
+                                        >
+                                            Crawl
+                                        </Button>
+                                    </div>
+                                    <InputError message={errors.url} />
+                                </div>
+                            )}
+                        </Form>
+                    </div>
+                ) : null}
+
                 <div className="space-y-3">
-                    <Heading
-                        variant="small"
-                        title="Documents"
-                        description="Content this bot has ingested."
-                    />
+                    <div className="flex items-center justify-between">
+                        <Heading
+                            variant="small"
+                            title="Documents"
+                            description="Content this bot has ingested."
+                        />
+
+                        {permissions.canManageBots && botDocuments.length > 0 ? (
+                            <Form
+                                {...recrawl.form({
+                                    current_team: currentTeam.slug,
+                                    bot: bot.id,
+                                })}
+                            >
+                                {({ processing }) => (
+                                    <Button
+                                        type="submit"
+                                        variant="secondary"
+                                        size="sm"
+                                        data-test="recrawl-button"
+                                        disabled={processing}
+                                    >
+                                        <RefreshCw /> Re-crawl
+                                    </Button>
+                                )}
+                            </Form>
+                        ) : null}
+                    </div>
 
                     <div className="space-y-2">
-                        {documents.map((document) => (
+                        {botDocuments.map((document) => (
                             <div
                                 key={document.id}
                                 data-test="bot-document-row"
@@ -96,13 +178,42 @@ export default function BotsShow({ bot, documents, permissions }: Props) {
                                         {document.type}
                                     </div>
                                 </div>
-                                <Badge variant="secondary">
-                                    {document.status_label}
-                                </Badge>
+                                <div className="flex items-center gap-2">
+                                    <Badge
+                                        variant={
+                                            statusVariant[document.status] ??
+                                            'secondary'
+                                        }
+                                    >
+                                        {document.status_label}
+                                    </Badge>
+                                    {permissions.canManageBots ? (
+                                        <Form
+                                            {...documents.destroy.form({
+                                                current_team: currentTeam.slug,
+                                                bot: bot.id,
+                                                document: document.id,
+                                            })}
+                                        >
+                                            {({ processing }) => (
+                                                <Button
+                                                    type="submit"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    data-test="delete-document-button"
+                                                    disabled={processing}
+                                                    aria-label="Remove document"
+                                                >
+                                                    <Trash2 />
+                                                </Button>
+                                            )}
+                                        </Form>
+                                    ) : null}
+                                </div>
                             </div>
                         ))}
 
-                        {documents.length === 0 ? (
+                        {botDocuments.length === 0 ? (
                             <p className="py-8 text-center text-muted-foreground">
                                 No documents yet.
                             </p>

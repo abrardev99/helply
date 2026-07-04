@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Enums\DocumentStatus;
 use App\Models\Document;
+use App\Support\SafeUrl;
 use Illuminate\Bus\Batch;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -36,6 +37,12 @@ class CrawlSiteJob implements ShouldQueue
     private const PAGES_PER_PARALLEL_GROUP = 10;
 
     /**
+     * Hard cap on how many pages a single crawl will ingest. Guards against enormous
+     * sitemaps exhausting the queue and the customer's embedding budget.
+     */
+    private const MAX_PAGES = 200;
+
+    /**
      * @param  string  $botId  The owning bot (UUID).
      * @param  string  $seedUrl  Any URL on the target site; used to locate sitemap.xml.
      */
@@ -65,8 +72,27 @@ class CrawlSiteJob implements ShouldQueue
             ->push($this->seedUrl) // ensure the seed page itself is crawled
             ->map(fn (string $url): string => trim($url))
             ->filter()
+            // Drop URLs that resolve to private/loopback/link-local targets or use a
+            // non-http(s) scheme — an attacker-controlled sitemap could otherwise point
+            // the crawler at internal services (SSRF).
+            ->filter(fn (string $url): bool => SafeUrl::hasSafeTarget($url))
             ->unique()
             ->values();
+
+        if ($pageUrls->count() > self::MAX_PAGES) {
+            Log::warning('CrawlSiteJob truncated an oversized sitemap.', [
+                'bot_id' => $this->botId,
+                'discovered' => $pageUrls->count(),
+                'limit' => self::MAX_PAGES,
+            ]);
+
+            // Keep the seed page and fill the rest of the budget with discovered pages.
+            $pageUrls = $pageUrls
+                ->reject(fn (string $url): bool => $url === trim($this->seedUrl))
+                ->take(self::MAX_PAGES - 1)
+                ->prepend(trim($this->seedUrl))
+                ->values();
+        }
 
         // No sitemap (or an empty one) => log and fail gracefully. Release the claimed
         // seed(s) to 'failed' so they don't sit in 'processing' forever.

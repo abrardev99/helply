@@ -29,8 +29,8 @@ criteria. Architecture context lives in [`/docs`](../docs).
 
 | ID | Feature | Status | Depends on |
 |----|---------|--------|-----------|
-| [F01](F01-bot-management.md) | Bot management (CRUD) | ⛔ todo | — |
-| [F02](F02-website-ingestion.md) | Website ingestion (sitemap crawl) | 🟡 partial | F01 |
+| [F01](F01-bot-management.md) | Bot management (CRUD) | ✅ done | — |
+| [F02](F02-website-ingestion.md) | Website ingestion (sitemap crawl) | ✅ done | F01 |
 | [F03](F03-pdf-ingestion.md) | PDF ingestion | ⛔ todo | F01 |
 
 ## Phase 2 — Processing (Embeddings)
