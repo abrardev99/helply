@@ -14,8 +14,10 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Routing\Route as RouteElement;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -43,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
     protected function configureDefaults(): void
     {
         $this->configureModels();
+        $this->configureRouteBindings();
 
         Date::use(CarbonImmutable::class);
 
@@ -77,5 +80,18 @@ class AppServiceProvider extends ServiceProvider
             'conversation' => Conversation::class,
             'message' => Message::class,
         ]);
+    }
+
+    /**
+     * Scope route-model bindings to the team in the URL so a bot is never
+     * resolvable across teams.
+     */
+    private function configureRouteBindings(): void
+    {
+        Route::bind('bot', function (string $value, RouteElement $route): Bot {
+            $team = Team::where('slug', $route->parameter('current_team'))->firstOrFail();
+
+            return $team->bots()->findOrFail($value);
+        });
     }
 }

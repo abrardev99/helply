@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\BotStatus;
 use App\Models\Bot;
 use App\Models\Team;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -21,8 +22,8 @@ class BotFactory extends Factory
         return [
             'team_id' => Team::factory(),
             'name' => fake()->words(2, true),
-            'embed_origins' => [fake()->url(), fake()->url()],
-            'status' => 'active',
+            'embed_origins' => ['https://'.fake()->unique()->domainName()],
+            'status' => BotStatus::Active,
         ];
     }
 }

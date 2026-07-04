@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Bots\BotController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
@@ -11,6 +12,8 @@ Route::prefix('{current_team}')
     ->middleware(['auth', 'verified', EnsureTeamMembership::class])
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+        Route::resource('bots', BotController::class);
     });
 
 Route::middleware(['auth'])->group(function () {
