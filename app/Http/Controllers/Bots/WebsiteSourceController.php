@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Bots;
 
 use App\Enums\DocumentStatus;
+use App\Enums\DocumentType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Bots\StoreWebsiteSourceRequest;
 use App\Jobs\CrawlSiteJob;
@@ -23,7 +24,7 @@ class WebsiteSourceController extends Controller
         // document and simply re-affirms it as pending so the crawl runs again.
         $bot->documents()->updateOrCreate(
             ['source_url' => $url],
-            ['type' => 'web', 'status' => DocumentStatus::Pending],
+            ['type' => DocumentType::Web, 'status' => DocumentStatus::Pending],
         );
 
         CrawlSiteJob::dispatch($bot->id, $url);

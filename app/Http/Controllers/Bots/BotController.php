@@ -91,7 +91,8 @@ class BotController extends Controller
                 ->map(fn (Document $document) => [
                     'id' => $document->id,
                     'title' => $document->title,
-                    'type' => $document->type,
+                    'type' => $document->type->value,
+                    'type_label' => $document->type->label(),
                     'source_url' => $document->source_url,
                     'status' => $document->status->value,
                     'status_label' => $document->status->label(),

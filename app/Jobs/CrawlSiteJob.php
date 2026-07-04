@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Enums\DocumentStatus;
+use App\Enums\DocumentType;
 use App\Models\Document;
 use App\Support\SafeUrl;
 use Illuminate\Bus\Batch;
@@ -112,7 +113,7 @@ class CrawlSiteJob implements ShouldQueue
         // untouched here and re-affirmed to 'processing' in the bulk update below.
         $documents = $pageUrls->map(fn (string $url): Document => Document::query()->firstOrCreate(
             ['bot_id' => $this->botId, 'source_url' => $url],
-            ['type' => 'web', 'status' => DocumentStatus::Pending],
+            ['type' => DocumentType::Web, 'status' => DocumentStatus::Pending],
         ));
 
         // Claim every page in this crawl (-> processing) BEFORE dispatching the batch, so

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Bots\BotController;
 use App\Http\Controllers\Bots\DocumentController;
+use App\Http\Controllers\Bots\PdfSourceController;
 use App\Http\Controllers\Bots\RecrawlBotController;
 use App\Http\Controllers\Bots\WebsiteSourceController;
 use App\Http\Controllers\DashboardController;
@@ -19,6 +20,7 @@ Route::prefix('{current_team}')
         Route::resource('bots', BotController::class);
 
         Route::post('bots/{bot}/sources', [WebsiteSourceController::class, 'store'])->name('bots.sources.store');
+        Route::post('bots/{bot}/pdfs', [PdfSourceController::class, 'store'])->name('bots.pdfs.store');
         Route::post('bots/{bot}/recrawl', RecrawlBotController::class)->name('bots.recrawl');
         Route::delete('bots/{bot}/documents/{document}', [DocumentController::class, 'destroy'])->name('bots.documents.destroy');
     });

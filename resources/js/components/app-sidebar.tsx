@@ -14,7 +14,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
+import { dashboard,  index as botsIndex } from '@/routes';
 import type { NavItem } from '@/types';
 
 export function AppSidebar() {
@@ -31,7 +31,7 @@ export function AppSidebar() {
         },
         {
             title: 'Bot',
-            href: '/bot',
+            href: page.props.currentTeam ? botsIndex(currentTeam.slug).url : '/',
             'icon': Bot
         },
     ];

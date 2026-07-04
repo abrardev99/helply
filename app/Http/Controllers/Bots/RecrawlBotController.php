@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Bots;
 
 use App\Enums\DocumentStatus;
+use App\Enums\DocumentType;
 use App\Http\Controllers\Controller;
 use App\Jobs\CrawlSiteJob;
 use App\Models\Bot;
@@ -22,7 +23,7 @@ class RecrawlBotController extends Controller
         Gate::authorize('update', $bot);
 
         $seed = $bot->documents()
-            ->where('type', 'web')
+            ->where('type', DocumentType::Web)
             ->whereNotNull('source_url')
             ->first();
 
@@ -33,7 +34,7 @@ class RecrawlBotController extends Controller
         }
 
         $bot->documents()
-            ->where('type', 'web')
+            ->where('type', DocumentType::Web)
             ->update(['status' => DocumentStatus::Pending]);
 
         CrawlSiteJob::dispatch($bot->id, $seed->source_url);

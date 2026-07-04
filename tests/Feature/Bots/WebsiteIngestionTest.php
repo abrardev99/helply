@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\DocumentStatus;
+use App\Enums\DocumentType;
 use App\Enums\TeamRole;
 use App\Jobs\CrawlSiteJob;
 use App\Jobs\ProcessPageJob;
@@ -58,7 +59,7 @@ it('lets a manager add a website URL and dispatches a crawl', function () {
     $document = Document::query()->firstOrFail();
 
     expect($document->bot_id)->toBe($bot->id)
-        ->and($document->type)->toBe('web')
+        ->and($document->type)->toBe(DocumentType::Web)
         ->and($document->source_url)->toBe(PUBLIC_HOST.'/docs')
         ->and($document->status)->toBe(DocumentStatus::Pending);
 

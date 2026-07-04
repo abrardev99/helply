@@ -13,6 +13,7 @@ export type BotDocument = {
     id: string;
     title: string | null;
     type: string;
+    type_label: string;
     source_url: string | null;
     status: string;
     status_label: string;

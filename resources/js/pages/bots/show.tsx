@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { edit, index, recrawl, show } from '@/routes/bots';
 import documents from '@/routes/bots/documents';
+import pdfs from '@/routes/bots/pdfs';
 import sources from '@/routes/bots/sources';
 import type { Bot, BotDocument, BotPermissions } from '@/types';
 
@@ -131,6 +132,48 @@ export default function BotsShow({
                     </div>
                 ) : null}
 
+                {permissions.canManageBots ? (
+                    <div className="space-y-3">
+                        <Heading
+                            variant="small"
+                            title="Upload a PDF"
+                            description="We'll extract the text and ingest it as content."
+                        />
+
+                        <Form
+                            {...pdfs.store.form({
+                                current_team: currentTeam.slug,
+                                bot: bot.id,
+                            })}
+                            resetOnSuccess
+                            className="max-w-xl space-y-2"
+                        >
+                            {({ errors, processing }) => (
+                                <>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            id="file"
+                                            name="file"
+                                            type="file"
+                                            accept="application/pdf"
+                                            data-test="pdf-file-input"
+                                            required
+                                        />
+                                        <Button
+                                            type="submit"
+                                            data-test="upload-pdf-button"
+                                            disabled={processing}
+                                        >
+                                            Upload
+                                        </Button>
+                                    </div>
+                                    <InputError message={errors.file} />
+                                </>
+                            )}
+                        </Form>
+                    </div>
+                ) : null}
+
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
                         <Heading
@@ -175,7 +218,7 @@ export default function BotsShow({
                                             'Untitled'}
                                     </div>
                                     <div className="text-sm text-muted-foreground">
-                                        {document.type}
+                                        {document.type_label}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">

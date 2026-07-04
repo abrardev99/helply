@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\DocumentStatus;
+use App\Enums\DocumentType;
 use Database\Factories\DocumentFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -15,7 +16,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property string $id
  * @property string $bot_id
- * @property string $type
+ * @property DocumentType $type
  * @property string|null $source_url
  * @property string|null $title
  * @property DocumentStatus $status
@@ -57,6 +58,7 @@ class Document extends Model
     protected function casts(): array
     {
         return [
+            'type' => DocumentType::class,
             'status' => DocumentStatus::class,
         ];
     }
