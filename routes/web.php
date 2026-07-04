@@ -4,6 +4,7 @@ use App\Http\Controllers\Bots\BotController;
 use App\Http\Controllers\Bots\DocumentController;
 use App\Http\Controllers\Bots\PdfSourceController;
 use App\Http\Controllers\Bots\RecrawlBotController;
+use App\Http\Controllers\Bots\ReembedController;
 use App\Http\Controllers\Bots\WebsiteSourceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Teams\TeamInvitationController;
@@ -22,6 +23,7 @@ Route::prefix('{current_team}')
         Route::post('bots/{bot}/sources', [WebsiteSourceController::class, 'store'])->name('bots.sources.store');
         Route::post('bots/{bot}/pdfs', [PdfSourceController::class, 'store'])->name('bots.pdfs.store');
         Route::post('bots/{bot}/recrawl', RecrawlBotController::class)->name('bots.recrawl');
+        Route::post('bots/{bot}/reembed', ReembedController::class)->name('bots.reembed');
         Route::delete('bots/{bot}/documents/{document}', [DocumentController::class, 'destroy'])->name('bots.documents.destroy');
     });
 

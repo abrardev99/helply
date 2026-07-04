@@ -42,6 +42,7 @@ class Chunk extends Model
     {
         return [
             'embedding' => 'array',
+            'embedded_at' => 'datetime',
         ];
     }
 }

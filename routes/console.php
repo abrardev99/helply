@@ -16,3 +16,9 @@ Schedule::call(function () {
 Schedule::command('documents:queue-pending')
     ->everyFiveMinutes()
     ->withoutOverlapping();
+
+// Embed any chunks whose vectors are still missing (e.g. after a key was added later, or
+// a partial embedding run). The job only touches NULL embeddings, so this is idempotent.
+Schedule::command('chunks:embed-pending')
+    ->everyFiveMinutes()
+    ->withoutOverlapping();

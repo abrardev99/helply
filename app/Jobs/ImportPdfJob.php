@@ -80,6 +80,10 @@ class ImportPdfJob implements ShouldQueue
 
                 $document->update(['status' => DocumentStatus::Done]);
             });
+
+            // Kick off embedding now that the PDF's chunks exist. Dispatched after the
+            // transaction commits; a no-op when no OpenAI key is configured.
+            EmbedChunksJob::dispatch($document->bot_id);
         } catch (Throwable $exception) {
             $document->update(['status' => DocumentStatus::Failed]);
 

@@ -104,6 +104,10 @@ class ProcessPageJob implements ShouldQueue
                     'status' => DocumentStatus::Done,
                 ]);
             });
+
+            // Kick off embedding now that the page's chunks exist. Dispatched after the
+            // transaction commits; a no-op when no OpenAI key is configured.
+            EmbedChunksJob::dispatch($document->bot_id);
         } catch (Throwable $exception) {
             // Mark failed and rethrow so the batch records the failure. failed() below is
             // the terminal safety net for cases where handle() is never reached.

@@ -1,6 +1,6 @@
 # F06 — Embedding Generation Pipeline
 
-**Phase:** 2 · **Status:** ⛔ todo · **Depends on:** F04, F05
+**Phase:** 2 · **Status:** ✅ done · **Depends on:** F04, F05
 
 ## Goal
 

@@ -39,7 +39,7 @@ criteria. Architecture context lives in [`/docs`](../docs).
 |----|---------|--------|-----------|
 | [F04](F04-openai-credentials.md) | OpenAI credential management (BYO key) | ✅ done | F01 |
 | [F05](F05-chunking.md) | Chunking strategy | ✅ done | F02/F03 |
-| [F06](F06-embedding-generation.md) | Embedding generation pipeline | ⛔ todo | F04, F05 |
+| [F06](F06-embedding-generation.md) | Embedding generation pipeline | ✅ done | F04, F05 |
 
 ## Phase 3 — Chat + Guardrails
 

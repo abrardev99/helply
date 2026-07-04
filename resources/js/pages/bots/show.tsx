@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { edit, index, recrawl, show } from '@/routes/bots';
+import { edit, index, recrawl, reembed, show } from '@/routes/bots';
 import documents from '@/routes/bots/documents';
 import pdfs from '@/routes/bots/pdfs';
 import sources from '@/routes/bots/sources';
@@ -15,6 +15,7 @@ import type { Bot, BotDocument, BotPermissions } from '@/types';
 type Props = {
     bot: Bot;
     documents: BotDocument[];
+    embedding: { total: number; embedded: number };
     permissions: BotPermissions;
 };
 
@@ -28,6 +29,7 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'destructive'> = {
 export default function BotsShow({
     bot,
     documents: botDocuments,
+    embedding,
     permissions,
 }: Props) {
     const currentTeam = usePage().props.currentTeam;
@@ -173,6 +175,36 @@ export default function BotsShow({
                         </Form>
                     </div>
                 ) : null}
+
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div>
+                        <p className="font-medium">Embeddings</p>
+                        <p className="text-sm text-muted-foreground">
+                            {embedding.embedded} / {embedding.total} chunks
+                            embedded
+                        </p>
+                    </div>
+                    {permissions.canManageBots && embedding.total > 0 ? (
+                        <Form
+                            {...reembed.form({
+                                current_team: currentTeam.slug,
+                                bot: bot.id,
+                            })}
+                        >
+                            {({ processing }) => (
+                                <Button
+                                    type="submit"
+                                    variant="secondary"
+                                    size="sm"
+                                    data-test="reembed-button"
+                                    disabled={processing}
+                                >
+                                    <RefreshCw /> Re-embed
+                                </Button>
+                            )}
+                        </Form>
+                    ) : null}
+                </div>
 
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">

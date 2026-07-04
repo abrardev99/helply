@@ -97,6 +97,10 @@ class BotController extends Controller
                     'status' => $document->status->value,
                     'status_label' => $document->status->label(),
                 ]),
+            'embedding' => [
+                'total' => $bot->chunks()->count(),
+                'embedded' => $bot->chunks()->whereNotNull('embedding')->count(),
+            ],
             'permissions' => [
                 'canManageBots' => $request->user()->hasTeamPermission($bot->team, TeamPermission::ManageBots),
             ],
