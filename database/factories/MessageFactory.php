@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\MessageRole;
 use App\Models\Conversation;
 use App\Models\Message;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -18,14 +19,14 @@ class MessageFactory extends Factory
      */
     public function definition(): array
     {
-        $role = fake()->randomElement(['user', 'assistant']);
+        $role = fake()->randomElement(MessageRole::cases());
 
         return [
             'conversation_id' => Conversation::factory(),
             'role' => $role,
             'content' => fake()->paragraph(),
-            'sources' => $role === 'assistant' ? [fake()->url(), fake()->url()] : null,
-            'retrieval_score' => $role === 'assistant' ? fake()->randomFloat(4, 0, 1) : null,
+            'sources' => $role === MessageRole::Assistant ? [fake()->url(), fake()->url()] : null,
+            'retrieval_score' => $role === MessageRole::Assistant ? fake()->randomFloat(4, 0, 1) : null,
             'flagged' => false,
         ];
     }

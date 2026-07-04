@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\MessageRole;
 use Database\Factories\MessageFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -31,6 +32,7 @@ class Message extends Model
     protected function casts(): array
     {
         return [
+            'role' => MessageRole::class,
             'sources' => 'array',
             'retrieval_score' => 'float',
             'flagged' => 'boolean',

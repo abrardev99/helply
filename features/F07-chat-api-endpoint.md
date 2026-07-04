@@ -1,6 +1,6 @@
 # F07 — Public Chat API Endpoint
 
-**Phase:** 3 · **Status:** ⛔ todo · **Depends on:** F06 (also orchestrates F08/F09/F10)
+**Phase:** 3 · **Status:** ✅ done · **Depends on:** F06 (also orchestrates F08/F09/F10)
 
 ## Goal
 

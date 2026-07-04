@@ -12,11 +12,14 @@ use App\Models\Team;
 use App\Models\TeamInvitation;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Route as RouteElement;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -46,6 +49,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureModels();
         $this->configureRouteBindings();
+        $this->configureRateLimiting();
 
         Date::use(CarbonImmutable::class);
 
@@ -83,15 +87,35 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Scope route-model bindings to the team in the URL so a bot is never
-     * resolvable across teams.
+     * Scope dashboard route-model bindings to the team in the URL so a bot is never
+     * resolvable across teams. Public routes (e.g. the widget endpoint) have no
+     * `current_team` and resolve the bot directly by id.
      */
     private function configureRouteBindings(): void
     {
         Route::bind('bot', function (string $value, RouteElement $route): Bot {
-            $team = Team::where('slug', $route->parameter('current_team'))->firstOrFail();
+            $teamSlug = $route->parameter('current_team');
+
+            if ($teamSlug === null) {
+                return Bot::query()->findOrFail($value);
+            }
+
+            $team = Team::where('slug', $teamSlug)->firstOrFail();
 
             return $team->bots()->findOrFail($value);
+        });
+    }
+
+    /**
+     * Rate limiter for the public widget chat endpoint: throttled per bot and per client
+     * IP to protect the customer's OpenAI spend and the app from floods.
+     */
+    private function configureRateLimiting(): void
+    {
+        RateLimiter::for('widget-chat', function (Request $request): Limit {
+            $botId = $request->route('bot')?->id ?? 'unknown';
+
+            return Limit::perMinute(30)->by($botId.'|'.$request->ip());
         });
     }
 }
