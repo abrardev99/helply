@@ -1,12 +1,14 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
 import { MessagesSquare, Pencil, RefreshCw, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useClipboard } from '@/hooks/use-clipboard';
 import { edit, index, recrawl, reembed, show } from '@/routes/agents';
 import conversations from '@/routes/agents/conversations';
 import documents from '@/routes/agents/documents';
@@ -38,6 +40,7 @@ export default function AgentsShow({
 }: Props) {
     const currentTeam = usePage().props.currentTeam;
     const [copied, setCopied] = useState(false);
+    const [, copy] = useClipboard();
 
     if (!currentTeam) {
         return null;
@@ -45,11 +48,18 @@ export default function AgentsShow({
 
     const embedSnippet = `<script src="${widgetScriptUrl}" data-agent-id="${agent.id}" defer></script>`;
 
-    const copySnippet = () => {
-        navigator.clipboard?.writeText(embedSnippet).then(() => {
+    const copySnippet = async () => {
+        const succeeded = await copy(embedSnippet);
+
+        if (succeeded) {
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
-        });
+            toast.success('Embed snippet copied to clipboard.');
+
+            return;
+        }
+
+        toast.error('Could not copy the snippet. Please copy it manually.');
     };
 
     return (

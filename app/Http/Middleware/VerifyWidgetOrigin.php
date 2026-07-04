@@ -4,8 +4,10 @@ namespace App\Http\Middleware;
 
 use App\Models\Agent;
 use Closure;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 class VerifyWidgetOrigin
 {
@@ -41,7 +43,16 @@ class VerifyWidgetOrigin
             abort(403, __('This origin is not allowed to use this agent.'));
         }
 
-        $response = $next($request);
+        // Even if the request errors (e.g. a misconfigured agent), the response must carry
+        // CORS headers so a backend failure surfaces as a real error to the widget rather
+        // than masquerading as a CORS block.
+        try {
+            $response = $next($request);
+        } catch (Throwable $exception) {
+            $handler = app(ExceptionHandler::class);
+            $handler->report($exception);
+            $response = $handler->render($request, $exception);
+        }
 
         $this->applyCorsHeaders($response, $origin);
 
