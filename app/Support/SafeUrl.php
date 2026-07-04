@@ -2,6 +2,10 @@
 
 namespace App\Support;
 
+use GuzzleHttp\Psr7\UriNormalizer;
+use GuzzleHttp\Psr7\Utils;
+use Throwable;
+
 class SafeUrl
 {
     /**
@@ -9,6 +13,32 @@ class SafeUrl
      * ftp://, …) is a classic SSRF vector and is rejected outright.
      */
     private const ALLOWED_SCHEMES = ['http', 'https'];
+
+    /**
+     * Canonicalize a URL so equivalent variants collapse to one key — lowercased
+     * scheme/host, default ports and dot-segments removed, fragment dropped, and a
+     * trailing slash stripped from non-root paths. Keeps crawls from ingesting
+     * `/x` and `/x/` (or `example.com` and `example.com/`) as separate documents.
+     */
+    public static function normalize(string $url): string
+    {
+        try {
+            $uri = UriNormalizer::normalize(
+                Utils::uriFor($url),
+                UriNormalizer::PRESERVING_NORMALIZATIONS,
+            )->withFragment('');
+        } catch (Throwable) {
+            return $url;
+        }
+
+        $path = $uri->getPath();
+
+        if (strlen($path) > 1 && str_ends_with($path, '/')) {
+            $uri = $uri->withPath(rtrim($path, '/'));
+        }
+
+        return (string) $uri;
+    }
 
     /**
      * Full guard for user-supplied URLs at ingestion time: the URL must be a valid

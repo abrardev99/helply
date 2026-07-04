@@ -8,17 +8,19 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Agents\StoreWebsiteSourceRequest;
 use App\Jobs\CrawlSiteJob;
 use App\Models\Agent;
+use App\Support\SafeUrl;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 
 class WebsiteSourceController extends Controller
 {
     /**
-     * Add a website URL to a agent and kick off a crawl of its sitemap.
+     * Add a website URL to an agent and kick off a crawl.
      */
     public function store(StoreWebsiteSourceRequest $request, string $currentTeam, Agent $agent): RedirectResponse
     {
-        $url = $request->validated('url');
+        // Normalize so the seed dedupes with the same page discovered via link-following.
+        $url = SafeUrl::normalize($request->validated('url'));
 
         // Idempotent on (agent_id, source_url): re-adding the same URL re-uses the seed
         // document and simply re-affirms it as pending so the crawl runs again.

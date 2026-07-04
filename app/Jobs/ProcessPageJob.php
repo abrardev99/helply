@@ -270,7 +270,7 @@ class ProcessPageJob implements ShouldQueue
                 continue;
             }
 
-            $url = (string) $resolved;
+            $url = SafeUrl::normalize((string) $resolved);
 
             if (SafeUrl::hasSafeTarget($url)) {
                 $links[$url] = true;
