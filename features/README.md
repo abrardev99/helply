@@ -46,7 +46,7 @@ criteria. Architecture context lives in [`/docs`](../docs).
 | ID | Feature | Status | Depends on |
 |----|---------|--------|-----------|
 | [F07](F07-chat-api-endpoint.md) | Public chat API endpoint | ⛔ todo | F06 |
-| [F08](F08-retrieval.md) | Retrieval (vector search + reranking) | ⛔ todo | F06 |
+| [F08](F08-retrieval.md) | Retrieval (vector search + reranking) | ✅ done | F06 |
 | [F09](F09-answer-generation.md) | Answer generation | ⛔ todo | F04, F08 |
 | [F10](F10-guardrails.md) | Guardrails (relevance + grounding) | ⛔ todo | F08, F09 |
 | [F11](F11-conversations-analytics.md) | Conversations & analytics | ⛔ todo | F07 |

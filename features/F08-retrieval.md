@@ -1,6 +1,6 @@
 # F08 — Retrieval (Vector Search + Reranking)
 
-**Phase:** 3 · **Status:** ⛔ todo · **Depends on:** F06
+**Phase:** 3 · **Status:** ✅ done · **Depends on:** F06
 
 ## Goal
 
