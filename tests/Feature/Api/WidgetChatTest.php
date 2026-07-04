@@ -151,14 +151,17 @@ it('sets the CORS header on the chat response', function () {
     expect($response->headers->get('Access-Control-Allow-Origin'))->toBe(ALLOWED_ORIGIN);
 });
 
-it('keeps CORS headers on an error response so failures do not look like CORS blocks', function () {
-    // Agent with no OpenAI key: the pipeline errors, but the response must still be
-    // CORS-enabled for the allow-listed origin.
+it('degrades gracefully (with CORS headers) when the agent has no OpenAI key', function () {
     $team = Team::factory()->create(['openai_api_key' => null]);
     $agent = Agent::factory()->for($team)->create(['embed_origins' => [ALLOWED_ORIGIN]]);
 
     $response = $this->postJson(chatUrl($agent), ['message' => 'hi'], ['Origin' => ALLOWED_ORIGIN]);
 
-    expect($response->status())->toBe(500)
-        ->and($response->headers->get('Access-Control-Allow-Origin'))->toBe(ALLOWED_ORIGIN);
+    $response->assertOk();
+    expect($response->headers->get('Access-Control-Allow-Origin'))->toBe(ALLOWED_ORIGIN)
+        ->and($response->json('answer'))->toContain($agent->name);
+
+    // Recorded as a flagged, "unavailable" assistant message for the owner to notice.
+    $assistant = Message::query()->where('role', 'assistant')->firstOrFail();
+    expect($assistant->flagged)->toBeTrue();
 });

@@ -7,6 +7,7 @@ enum ChatOutcome: string
     case Answered = 'answered';
     case RefusedLowRelevance = 'refused_low_relevance';
     case RefusedUngrounded = 'refused_ungrounded';
+    case Unavailable = 'unavailable';
 
     /**
      * Get the display label for the outcome.
@@ -17,6 +18,7 @@ enum ChatOutcome: string
             self::Answered => __('Answered'),
             self::RefusedLowRelevance => __('Refused (off-topic)'),
             self::RefusedUngrounded => __('Refused (ungrounded)'),
+            self::Unavailable => __('Unavailable (not configured)'),
         };
     }
 

@@ -3,10 +3,12 @@
 namespace App\Services\Chat;
 
 use App\Ai\AnswerGenerator;
+use App\Ai\Exceptions\MissingOpenAiKeyException;
 use App\Data\ChatResult;
 use App\Enums\ChatOutcome;
 use App\Models\Agent;
 use App\Services\Retrieval\ChunkRetriever;
+use Illuminate\Support\Facades\Log;
 
 class ChatPipeline
 {
@@ -29,6 +31,29 @@ class ChatPipeline
      * @param  list<array{role: string, content: string}>  $history
      */
     public function handle(Agent $agent, string $question, array $history = []): ChatResult
+    {
+        try {
+            return $this->answer($agent, $question, $history);
+        } catch (MissingOpenAiKeyException) {
+            // The agent has no usable OpenAI key: degrade to a friendly message rather than
+            // erroring the public widget. The owner sees the misconfiguration via the log
+            // and the flagged conversation.
+            Log::warning('Chat unavailable: no OpenAI key configured.', ['agent_id' => $agent->id]);
+
+            return new ChatResult(
+                answer: $this->guardrail->unavailableMessage($agent),
+                outcome: ChatOutcome::Unavailable,
+                sources: [],
+                retrievalScore: 0.0,
+                flagged: true,
+            );
+        }
+    }
+
+    /**
+     * @param  list<array{role: string, content: string}>  $history
+     */
+    private function answer(Agent $agent, string $question, array $history): ChatResult
     {
         $retrieval = $this->retriever->retrieve($agent, $question);
 

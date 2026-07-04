@@ -70,6 +70,16 @@ class Guardrail
         ]);
     }
 
+    /**
+     * Friendly message shown when the agent is not usable (e.g. no OpenAI key configured).
+     */
+    public function unavailableMessage(Agent $agent): string
+    {
+        return __("Sorry, :agent isn't available right now. Please try again later.", [
+            'agent' => $agent->name,
+        ]);
+    }
+
     private function looksLikeRefusal(string $answer): bool
     {
         return Str::contains(Str::lower($answer), self::REFUSAL_MARKERS);
