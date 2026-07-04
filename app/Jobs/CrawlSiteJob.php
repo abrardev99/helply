@@ -95,26 +95,20 @@ class CrawlSiteJob implements ShouldQueue
                 ->values();
         }
 
-        // No safe URLs at all (not even the seed survived the SSRF filter) => fail the seed
-        // so it does not sit pending forever.
-        if ($pageUrls->isEmpty()) {
-            Log::warning('CrawlSiteJob found no crawlable URLs.', [
+        // No usable sitemap URLs (site has no sitemap, or only the seed survived). A
+        // sitemap is required to enumerate a site's public pages — this is enforced at
+        // add-time by the HasSitemap rule — so fail the seed/claimed docs gracefully
+        // rather than leaving them stuck pending.
+        if ($pageUrls->count() <= 1) {
+            Log::warning('CrawlSiteJob found no sitemap URLs.', [
                 'agent_id' => $this->agentId,
                 'sitemap_url' => $sitemapUrl,
             ]);
 
+            $this->markProcessingAsFailed();
             $this->markSeedAsFailed();
 
             return;
-        }
-
-        // A missing/empty sitemap is not fatal: we still ingest the seed page itself (the
-        // one URL we always have). Many sites have no sitemap.xml.
-        if ($pageUrls->count() === 1) {
-            Log::info('CrawlSiteJob found no sitemap; ingesting the seed page only.', [
-                'agent_id' => $this->agentId,
-                'sitemap_url' => $sitemapUrl,
-            ]);
         }
 
         // Idempotent on (agent_id, source_url): create a document per discovered URL only
@@ -313,5 +307,6 @@ class CrawlSiteJob implements ShouldQueue
     public function failed(?Throwable $exception): void
     {
         $this->markProcessingAsFailed();
+        $this->markSeedAsFailed();
     }
 }

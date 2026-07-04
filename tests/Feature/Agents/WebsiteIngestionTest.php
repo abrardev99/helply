@@ -46,6 +46,8 @@ function sitemapXml(string ...$paths): string
 
 it('lets a manager add a website URL and dispatches a crawl', function () {
     Queue::fake();
+    // The URL is only accepted when its sitemap.xml is reachable.
+    Http::fake([PUBLIC_HOST.'/sitemap.xml' => Http::response(sitemapXml('/docs'))]);
 
     [$user, $team] = ingestionMember(TeamRole::Owner);
     $agent = Agent::factory()->for($team)->create();
@@ -78,6 +80,23 @@ it('rejects URLs that target private or internal addresses', function () {
             ->post(route('agents.sources.store', ['current_team' => $team->slug, 'agent' => $agent->id]), ['url' => $url])
             ->assertInvalid(['url']);
     }
+
+    expect(Document::query()->count())->toBe(0);
+    Queue::assertNothingPushed();
+});
+
+it('rejects a website URL whose site has no sitemap', function () {
+    Queue::fake();
+    Http::fake([PUBLIC_HOST.'/sitemap.xml' => Http::response('Not found', 404)]);
+
+    [$user, $team] = ingestionMember(TeamRole::Owner);
+    $agent = Agent::factory()->for($team)->create();
+
+    $this->actingAs($user)
+        ->post(route('agents.sources.store', ['current_team' => $team->slug, 'agent' => $agent->id]), [
+            'url' => PUBLIC_HOST.'/docs',
+        ])
+        ->assertInvalid(['url']);
 
     expect(Document::query()->count())->toBe(0);
     Queue::assertNothingPushed();
@@ -173,15 +192,13 @@ it('does not duplicate documents when a crawl re-runs', function () {
     expect($agent->documents()->count())->toBe(2);
 });
 
-it('ingests the seed page when the site has no sitemap', function () {
-    Bus::fake();
-
+it('fails the seed gracefully when the site has no sitemap', function () {
     Http::fake([
         PUBLIC_HOST.'/sitemap.xml' => Http::response('Not found', 404),
     ]);
 
     $agent = Agent::factory()->create();
-    Document::factory()->for($agent)->create([
+    $seed = Document::factory()->for($agent)->create([
         'type' => DocumentType::Web,
         'source_url' => PUBLIC_HOST.'/',
         'status' => DocumentStatus::Pending,
@@ -189,9 +206,8 @@ it('ingests the seed page when the site has no sitemap', function () {
 
     (new CrawlSiteJob($agent->id, PUBLIC_HOST.'/'))->handle();
 
-    // Only the seed URL, dispatched for processing — not left stuck or failed.
-    expect($agent->documents()->count())->toBe(1);
-    Bus::assertBatched(fn ($batch) => $batch->jobs->count() === 1);
+    // Not left stuck on pending — marked failed so the dashboard reflects it.
+    expect($seed->fresh()->status)->toBe(DocumentStatus::Failed);
 });
 
 it('fails the seed when even it is not a safe target', function () {
