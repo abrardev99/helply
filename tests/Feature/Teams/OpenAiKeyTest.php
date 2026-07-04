@@ -105,7 +105,18 @@ it('falls back to the team key when the agent has no override', function () {
     expect(app(ResolvesTenantKey::class)->resolveOpenAiKey($agent))->toBe('sk-team-key');
 });
 
-it('throws a typed exception when no key is configured', function () {
+it('falls back to the platform key when no team or agent key is set', function () {
+    config(['ai.providers.openai.key' => 'sk-platform-key']);
+
+    $team = Team::factory()->create(['openai_api_key' => null]);
+    $agent = Agent::factory()->for($team)->create(['openai_api_key' => null]);
+
+    expect(app(ResolvesTenantKey::class)->resolveOpenAiKey($agent))->toBe('sk-platform-key');
+});
+
+it('throws a typed exception when no key is configured anywhere', function () {
+    config(['ai.providers.openai.key' => null]);
+
     $team = Team::factory()->create(['openai_api_key' => null]);
     $agent = Agent::factory()->for($team)->create(['openai_api_key' => null]);
 

@@ -9,13 +9,16 @@ use Closure;
 class ResolvesTenantKey
 {
     /**
-     * Resolve the OpenAI key that a agent should use, preferring a per-agent override and
-     * falling back to the team key. Throws when neither is set so callers can surface a
+     * Resolve the OpenAI key that an agent should use. Resolution order:
+     * per-agent override → team key → platform key (config `ai.providers.openai.key`,
+     * i.e. the OPENAI_API_KEY env var). Throws when none is set so callers can surface a
      * clear "needs key" state rather than making a doomed API call.
      */
     public function resolveOpenAiKey(Agent $agent): string
     {
-        $key = $agent->openai_api_key ?: $agent->team->openai_api_key;
+        $key = $agent->openai_api_key
+            ?: $agent->team->openai_api_key
+            ?: config('ai.providers.openai.key');
 
         if (blank($key)) {
             throw new MissingOpenAiKeyException($agent);
