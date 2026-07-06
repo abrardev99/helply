@@ -21,45 +21,25 @@ use Illuminate\Support\Carbon;
 #[Fillable(['team_id', 'user_id', 'role'])]
 class Membership extends Pivot
 {
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
+    /** @var string */
     protected $table = 'team_members';
 
-    /**
-     * Indicates if the IDs are auto-incrementing.
-     *
-     * @var bool
-     */
+    /** @var bool */
     public $incrementing = true;
 
-    /**
-     * Get the team that the membership belongs to.
-     *
-     * @return BelongsTo<Team, $this>
-     */
+    /** @return BelongsTo<Team, $this> */
     public function team(): BelongsTo
     {
         return $this->belongsTo(Team::class);
     }
 
-    /**
-     * Get the user that belongs to this membership.
-     *
-     * @return BelongsTo<User, $this>
-     */
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    /** @return array<string, string> */
     protected function casts(): array
     {
         return [

@@ -14,8 +14,6 @@ use Illuminate\Console\Command;
 class QueuePendingDocuments extends Command
 {
     /**
-     * Execute the console command.
-     *
      * DESIGN CHOICE — we key the crawl off the *Agent*, not off individual document rows.
      * For this stage one Agent == one website, and a website's pages are discovered by the
      * crawl (the sitemap), not known up front. So a single pending "seed" document is all

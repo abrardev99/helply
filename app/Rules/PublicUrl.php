@@ -10,8 +10,6 @@ use Illuminate\Translation\PotentiallyTranslatedString;
 class PublicUrl implements ValidationRule
 {
     /**
-     * Run the validation rule.
-     *
      * Accepts only a full http(s) URL whose host resolves to a public address, blocking
      * private/loopback/link-local targets to prevent SSRF against internal services.
      *

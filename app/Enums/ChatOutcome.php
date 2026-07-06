@@ -9,9 +9,6 @@ enum ChatOutcome: string
     case RefusedUngrounded = 'refused_ungrounded';
     case Unavailable = 'unavailable';
 
-    /**
-     * Get the display label for the outcome.
-     */
     public function label(): string
     {
         return match ($this) {

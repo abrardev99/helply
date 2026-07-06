@@ -46,7 +46,6 @@ it('answers and persists both messages under one conversation', function () {
     $agent = widgetAgent();
 
     $response = $this->postJson(chatUrl($agent), [
-        'session_id' => 'sess-123',
         'message' => 'How long do refunds take?',
     ], ['Origin' => ALLOWED_ORIGIN]);
 
@@ -54,11 +53,10 @@ it('answers and persists both messages under one conversation', function () {
         ->assertJson([
             'answer' => 'Refunds are processed within 5 business days. [1]',
         ])
-        ->assertJsonStructure(['answer', 'sources', 'conversation_id']);
+        ->assertJsonStructure(['answer', 'sources', 'conversation_id', 'session_token']);
 
     $conversation = Conversation::query()->firstOrFail();
     expect($conversation->agent_id)->toBe($agent->id)
-        ->and($conversation->session_id)->toBe('sess-123')
         ->and($conversation->messages()->count())->toBe(2);
 
     $assistant = $conversation->messages()->where('role', 'assistant')->firstOrFail();
@@ -94,17 +92,34 @@ it('validates the message body', function () {
         ->assertStatus(422);
 });
 
-it('reuses the conversation across turns with the same session id', function () {
+it('reuses the conversation across turns when the signed session token is echoed', function () {
     fakeAnsweringPipeline();
     $agent = widgetAgent();
 
-    foreach (['First question?', 'Follow up?'] as $message) {
-        $this->postJson(chatUrl($agent), ['session_id' => 'sess-abc', 'message' => $message], ['Origin' => ALLOWED_ORIGIN])
-            ->assertOk();
-    }
+    $first = $this->postJson(chatUrl($agent), ['message' => 'First question?'], ['Origin' => ALLOWED_ORIGIN])
+        ->assertOk();
+
+    $token = $first->json('session_token');
+
+    $this->postJson(chatUrl($agent), ['session_id' => $token, 'message' => 'Follow up?'], ['Origin' => ALLOWED_ORIGIN])
+        ->assertOk();
 
     expect(Conversation::query()->count())->toBe(1)
         ->and(Conversation::query()->firstOrFail()->messages()->count())->toBe(4);
+});
+
+it('does not resume another visitor\'s conversation from a forged session token', function () {
+    fakeAnsweringPipeline();
+    $agent = widgetAgent();
+
+    $visitorA = $this->postJson(chatUrl($agent), ['message' => 'A first'], ['Origin' => ALLOWED_ORIGIN])->assertOk();
+    $conversationA = $visitorA->json('conversation_id');
+
+    // A raw, unsigned value must not attach to (or read) an existing conversation.
+    $forged = $this->postJson(chatUrl($agent), ['session_id' => 'not-a-valid-token', 'message' => 'B first'], ['Origin' => ALLOWED_ORIGIN])->assertOk();
+
+    expect($forged->json('conversation_id'))->not->toBe($conversationA)
+        ->and(Conversation::query()->count())->toBe(2);
 });
 
 it('throttles floods with a 429', function () {

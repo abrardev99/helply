@@ -6,6 +6,11 @@ use App\Enums\DocumentStatus;
 use App\Enums\DocumentType;
 use App\Models\Document;
 use App\Support\SafeUrl;
+use DOMDocument;
+use DOMNameSpaceNode;
+use DOMNode;
+use DOMNodeList;
+use DOMXPath;
 use Illuminate\Bus\Batch;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -20,29 +25,26 @@ class CrawlSiteJob implements ShouldQueue
 {
     use Queueable;
 
-    /**
-     * The number of times the job may be attempted.
-     */
     public int $tries = 3;
 
     /**
      * The maximum nesting depth to follow when a sitemap is a sitemap index.
      * Guards against malformed or self-referential sitemap-index loops.
      */
-    private const MAX_SITEMAP_DEPTH = 3;
+    private const MaxSitemapDepth = 3;
 
     /**
      * Roughly how many pages we intend to have crawling concurrently. See the dispatch
      * comment in handle(): real parallelism is governed by queue-worker concurrency.
      */
-    private const PAGES_PER_PARALLEL_GROUP = 10;
+    private const PagesPerParallelGroup = 10;
 
     /**
      * Hard cap on how many pages a single crawl will ingest. Guards against enormous
      * sitemaps (and link-following crawls) exhausting the queue and the customer's
      * embedding budget.
      */
-    public const MAX_PAGES = 200;
+    public const MaxPages = 200;
 
     /**
      * @param  string  $agentId  The owning agent (UUID).
@@ -53,19 +55,12 @@ class CrawlSiteJob implements ShouldQueue
         public string $seedUrl,
     ) {}
 
-    /**
-     * The number of seconds to wait before retrying the job.
-     *
-     * @return list<int>
-     */
+    /** @return list<int> */
     public function backoff(): array
     {
         return [10, 30, 60];
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
         $sitemapUrl = $this->sitemapUrlFor($this->seedUrl);
@@ -81,18 +76,20 @@ class CrawlSiteJob implements ShouldQueue
             ->unique()
             ->values();
 
-        if ($pageUrls->count() > self::MAX_PAGES) {
+        if ($pageUrls->count() > self::MaxPages) {
             Log::warning('CrawlSiteJob truncated an oversized sitemap.', [
                 'agent_id' => $this->agentId,
                 'discovered' => $pageUrls->count(),
-                'limit' => self::MAX_PAGES,
+                'limit' => self::MaxPages,
             ]);
 
-            // Keep the seed page and fill the rest of the budget with discovered pages.
+            // Keep the seed page and fill the rest of the budget with discovered pages by
+            // sorting the seed to the front before truncating.
+            $seed = trim($this->seedUrl);
+
             $pageUrls = $pageUrls
-                ->reject(fn (string $url): bool => $url === trim($this->seedUrl))
-                ->take(self::MAX_PAGES - 1)
-                ->prepend(trim($this->seedUrl))
+                ->sortByDesc(fn (string $url): bool => $url === $seed)
+                ->take(self::MaxPages)
                 ->values();
         }
 
@@ -111,7 +108,7 @@ class CrawlSiteJob implements ShouldQueue
 
         // A missing sitemap is fine: we start from whatever URLs we have (at minimum the
         // seed) and ProcessPageJob discovers the rest of the site by following internal
-        // links, up to MAX_PAGES.
+        // links, up to MaxPages.
         if ($pageUrls->count() === 1) {
             Log::info('CrawlSiteJob starting from the seed; will follow internal links.', [
                 'agent_id' => $this->agentId,
@@ -143,7 +140,7 @@ class CrawlSiteJob implements ShouldQueue
      * BATCH-OF-10 / parallelism note: a Bus::batch dispatches all of its jobs at once;
      * it does not throttle them. The "~10 pages at a time" requirement is therefore
      * satisfied operationally by running ~10 queue workers (worker concurrency), NOT by
-     * the batch object. We group the per-page jobs into sets of PAGES_PER_PARALLEL_GROUP
+     * the batch object. We group the per-page jobs into sets of PagesPerParallelGroup
      * below to make that intended concurrency explicit and to keep the dispatch payload
      * predictable; all groups still belong to the one named batch so the crawl is tracked
      * (and can complete / report) as a single unit. allowFailures() lets one bad page
@@ -155,7 +152,7 @@ class CrawlSiteJob implements ShouldQueue
     {
         $pageJobs = $documents
             ->map(fn (Document $document): ProcessPageJob => new ProcessPageJob($document->id))
-            ->chunk(self::PAGES_PER_PARALLEL_GROUP) // groups of 10 (intended concurrency)
+            ->chunk(self::PagesPerParallelGroup) // groups of 10 (intended concurrency)
             ->flatten()
             ->all();
 
@@ -181,13 +178,25 @@ class CrawlSiteJob implements ShouldQueue
      */
     private function collectUrls(string $sitemapUrl, int $depth = 0): array
     {
-        if ($depth > self::MAX_SITEMAP_DEPTH) {
+        if ($depth > self::MaxSitemapDepth) {
+            return [];
+        }
+
+        // Nested sitemap-index <loc> URLs are attacker-controlled, so re-validate every
+        // sitemap fetch (initial and recursed) against a public target before hitting it.
+        if (! SafeUrl::isPublic($sitemapUrl)) {
+            Log::warning('CrawlSiteJob refused to fetch an unsafe sitemap URL.', [
+                'agent_id' => $this->agentId,
+                'sitemap_url' => $sitemapUrl,
+            ]);
+
             return [];
         }
 
         $response = Http::timeout(15)
             ->connectTimeout(5)
             ->retry(2, 500, throw: false)
+            ->withOptions(['allow_redirects' => SafeUrl::guardedRedirects()])
             ->get($sitemapUrl);
 
         if ($response->failed()) {
@@ -211,7 +220,7 @@ class CrawlSiteJob implements ShouldQueue
         // the XML namespace the sitemap declares.
         $nested = $xpath->query("//*[local-name()='sitemap']/*[local-name()='loc']");
 
-        if ($nested instanceof \DOMNodeList && $nested->length > 0) {
+        if ($nested instanceof DOMNodeList && $nested->length > 0) {
             $urls = [];
 
             foreach ($this->locValues($nested) as $url) {
@@ -224,21 +233,21 @@ class CrawlSiteJob implements ShouldQueue
         // Otherwise it's a flat <urlset> of page <url><loc> entries.
         $pages = $xpath->query("//*[local-name()='url']/*[local-name()='loc']");
 
-        return $pages instanceof \DOMNodeList ? $this->locValues($pages) : [];
+        return $pages instanceof DOMNodeList ? $this->locValues($pages) : [];
     }
 
     /**
      * Extract trimmed, non-empty text values from a list of <loc> nodes.
      *
-     * @param  \DOMNodeList<\DOMNode|\DOMNameSpaceNode>  $nodes
+     * @param  DOMNodeList<DOMNode|DOMNameSpaceNode>  $nodes
      * @return list<string>
      */
-    private function locValues(\DOMNodeList $nodes): array
+    private function locValues(DOMNodeList $nodes): array
     {
         $values = [];
 
         foreach ($nodes as $node) {
-            if (! $node instanceof \DOMNode) {
+            if (! $node instanceof DOMNode) {
                 continue; // skip namespace nodes
             }
 
@@ -266,13 +275,13 @@ class CrawlSiteJob implements ShouldQueue
     /**
      * Safely parse a sitemap body into a DOMXPath, or null when it isn't valid XML.
      */
-    private function xpathFor(string $body): ?\DOMXPath
+    private function xpathFor(string $body): ?DOMXPath
     {
         if (trim($body) === '') {
             return null;
         }
 
-        $dom = new \DOMDocument;
+        $dom = new DOMDocument;
         $previous = libxml_use_internal_errors(true);
 
         // LIBXML_NONET disables network access during parsing (XXE hardening).
@@ -281,7 +290,7 @@ class CrawlSiteJob implements ShouldQueue
         libxml_clear_errors();
         libxml_use_internal_errors($previous);
 
-        return $loaded ? new \DOMXPath($dom) : null;
+        return $loaded ? new DOMXPath($dom) : null;
     }
 
     /**

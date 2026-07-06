@@ -26,9 +26,6 @@ use Laravel\Passkeys\Contracts\PasskeyLoginResponse as PasskeyLoginResponseContr
 
 class FortifyServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
@@ -38,9 +35,6 @@ class FortifyServiceProvider extends ServiceProvider
         $this->app->singleton(VerifyEmailResponseContract::class, VerifyEmailResponse::class);
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         $this->configureActions();
@@ -48,18 +42,12 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
     }
 
-    /**
-     * Configure Fortify actions.
-     */
     private function configureActions(): void
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
     }
 
-    /**
-     * Configure Fortify views.
-     */
     private function configureViews(): void
     {
         Fortify::loginView(fn (Request $request) => Inertia::render('auth/login', [
@@ -90,35 +78,27 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::confirmPasswordView(fn () => Inertia::render('auth/confirm-password'));
     }
 
-    /**
-     * Configure rate limiting.
-     */
     private function configureRateLimiting(): void
     {
-        RateLimiter::for('two-factor', function (Request $request) {
+        RateLimiter::for('two-factor', function (Request $request): Limit {
             return Limit::perMinute(5)->by($request->session()->get('login.id'));
         });
 
-        RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
+        RateLimiter::for('login', function (Request $request): Limit {
+            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username()))."|{$request->ip()}");
 
             return Limit::perMinute(5)->by($throttleKey);
         });
 
-        RateLimiter::for('passkeys', function (Request $request) {
+        RateLimiter::for('passkeys', function (Request $request): Limit {
             $credentialId = $request->input('credential.id');
+            $identifier = $credentialId ?: $request->session()->getId();
 
-            return Limit::perMinute(10)->by(
-                ($credentialId ?: $request->session()->getId()).'|'.$request->ip(),
-            );
+            return Limit::perMinute(10)->by("{$identifier}|{$request->ip()}");
         });
     }
 
-    /**
-     * Get the pending team invitation context for auth pages.
-     *
-     * @return array{code: string, teamName: string}|null
-     */
+    /** @return array{code: string, teamName: string}|null */
     private function teamInvitation(Request $request): ?array
     {
         $invitationCode = $request->query('invitation');

@@ -34,7 +34,9 @@ use Illuminate\Support\Carbon;
 class Agent extends Model
 {
     /** @use HasFactory<AgentFactory> */
-    use HasFactory, HasUuids;
+    use HasFactory;
+
+    use HasUuids;
 
     /**
      * The attributes that should be hidden from array/JSON serialization.
@@ -45,51 +47,31 @@ class Agent extends Model
      */
     protected $hidden = ['openai_api_key'];
 
-    /**
-     * Get the team that owns the agent.
-     *
-     * @return BelongsTo<Team, $this>
-     */
+    /** @return BelongsTo<Team, $this> */
     public function team(): BelongsTo
     {
         return $this->belongsTo(Team::class);
     }
 
-    /**
-     * Get the documents for the agent.
-     *
-     * @return HasMany<Document, $this>
-     */
+    /** @return HasMany<Document, $this> */
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class);
     }
 
-    /**
-     * Get the chunks for the agent.
-     *
-     * @return HasMany<Chunk, $this>
-     */
+    /** @return HasMany<Chunk, $this> */
     public function chunks(): HasMany
     {
         return $this->hasMany(Chunk::class);
     }
 
-    /**
-     * Get the conversations for the agent.
-     *
-     * @return HasMany<Conversation, $this>
-     */
+    /** @return HasMany<Conversation, $this> */
     public function conversations(): HasMany
     {
         return $this->hasMany(Conversation::class);
     }
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    /** @return array<string, string> */
     protected function casts(): array
     {
         return [

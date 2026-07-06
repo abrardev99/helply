@@ -9,9 +9,6 @@ enum DocumentStatus: string
     case Done = 'done';
     case Failed = 'failed';
 
-    /**
-     * Get the display label for the status.
-     */
     public function label(): string
     {
         return match ($this) {

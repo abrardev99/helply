@@ -9,11 +9,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/profile';
 import { send } from '@/routes/verification';
-import type { Auth } from '@/types';
-
-type PageProps = {
-    auth: Auth;
-};
 
 export default function Profile({
     mustVerifyEmail,
@@ -22,7 +17,7 @@ export default function Profile({
     mustVerifyEmail: boolean;
     status?: string;
 }) {
-    const { auth } = usePage<PageProps>().props;
+    const { auth } = usePage().props;
 
     return (
         <>

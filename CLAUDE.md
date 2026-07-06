@@ -9,7 +9,7 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
-- php - 8.3
+- php - 8.4
 - inertiajs/inertia-laravel (INERTIA_LARAVEL) - v3
 - laravel/ai (AI) - v0
 - laravel/fortify (FORTIFY) - v1
@@ -117,6 +117,13 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
 
+=== herd rules ===
+
+# Laravel Herd
+
+- The application is served by Laravel Herd at `https?://[kebab-case-project-dir].test`. Use the `get-absolute-url` tool to generate valid URLs. Never run commands to serve the site. It is always available.
+- Use the `herd` CLI to manage services, PHP versions, and sites (e.g. `herd sites`, `herd services:start <service>`, `herd php:list`). Run `herd list` to discover all available commands.
+
 === tests rules ===
 
 # Test Enforcement
@@ -204,6 +211,16 @@ Use Wayfinder to generate TypeScript functions for Laravel routes. Import from `
 # Inertia + React
 
 - IMPORTANT: Activate `inertia-react-development` when working with Inertia React client-side patterns.
+
+=== spatie/guidelines-skills rules ===
+
+# Project Coding Guidelines
+
+- This codebase follows Spatie's coding guidelines.
+- Always activate the `spatie-laravel-php` skill when writing, editing, reviewing, or formatting Laravel or PHP code.
+- Always activate the `spatie-javascript` skill when writing, editing, reviewing, or formatting JavaScript or TypeScript code.
+- Always activate the `spatie-version-control` skill when creating commits, branches, or managing Git operations.
+- Always activate the `spatie-security` skill when configuring security, reviewing authentication, or setting up servers and databases.
 
 </laravel-boost-guidelines>
 

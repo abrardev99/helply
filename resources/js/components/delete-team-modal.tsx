@@ -27,13 +27,13 @@ export default function DeleteTeamModal({ team, open, onOpenChange }: Props) {
 
     const canDeleteTeam = confirmationName === team.name;
 
-    const handleOpenChange = (nextOpen: boolean) => {
+    function handleOpenChange(nextOpen: boolean) {
         onOpenChange(nextOpen);
 
         if (!nextOpen) {
             setConfirmationName('');
         }
-    };
+    }
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>

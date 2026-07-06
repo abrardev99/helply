@@ -19,16 +19,14 @@
 
     var SESSION_KEY = 'helply_session_' + agentId;
 
-    function sessionId() {
-        var id = null;
-        try { id = localStorage.getItem(SESSION_KEY); } catch (e) {}
-        if (!id) {
-            id = (window.crypto && crypto.randomUUID)
-                ? crypto.randomUUID()
-                : String(Date.now()) + Math.random().toString(16).slice(2);
-            try { localStorage.setItem(SESSION_KEY, id); } catch (e) {}
-        }
-        return id;
+    // The session token is issued and signed by the server; we only store and echo it.
+    function sessionToken() {
+        try { return localStorage.getItem(SESSION_KEY) || ''; } catch (e) { return ''; }
+    }
+
+    function rememberSession(token) {
+        if (!token) { return; }
+        try { localStorage.setItem(SESSION_KEY, token); } catch (e) {}
     }
 
     var host = document.createElement('div');
@@ -91,13 +89,16 @@
         fetch(base + '/api/widget/' + agentId + '/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            body: JSON.stringify({ session_id: sessionId(), message: text })
+            body: JSON.stringify({ session_id: sessionToken(), message: text })
         }).then(function (res) {
             if (res.status === 429) { pending.textContent = 'Too many messages right now. Please wait a moment.'; return null; }
             if (!res.ok) { pending.textContent = 'Sorry, something went wrong. Please try again.'; return null; }
             return res.json();
         }).then(function (data) {
-            if (data) { pending.textContent = data.answer || ''; }
+            if (data) {
+                rememberSession(data.session_token);
+                pending.textContent = data.answer || '';
+            }
         }).catch(function () {
             pending.textContent = 'Network error. Please try again.';
         });

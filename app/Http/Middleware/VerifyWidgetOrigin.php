@@ -92,8 +92,8 @@ class VerifyWidgetOrigin
             return null;
         }
 
-        $origin = $parts['scheme'].'://'.$parts['host'];
+        $origin = "{$parts['scheme']}://{$parts['host']}";
 
-        return isset($parts['port']) ? $origin.':'.$parts['port'] : $origin;
+        return isset($parts['port']) ? "{$origin}:{$parts['port']}" : $origin;
     }
 }

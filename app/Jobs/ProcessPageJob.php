@@ -20,41 +20,32 @@ use Throwable;
 
 class ProcessPageJob implements ShouldQueue
 {
-    use Batchable, Queueable;
+    use Batchable;
+    use Queueable;
 
-    /**
-     * The number of times the job may be attempted.
-     */
     public int $tries = 3;
 
     /**
      * HTML elements whose text is chrome, not page content.
      */
-    private const NON_CONTENT_TAGS = ['script', 'style', 'noscript', 'template', 'nav', 'header', 'footer', 'aside', 'form', 'svg'];
+    private const NonContentTags = ['script', 'style', 'noscript', 'template', 'nav', 'header', 'footer', 'aside', 'form', 'svg'];
 
     /**
      * Largest page body we will parse (2 MiB). Anything beyond this is truncated before
      * DOM parsing to bound memory use on pathological pages.
      */
-    private const MAX_PAGE_BYTES = 2_097_152;
+    private const MaxPageBytes = 2_097_152;
 
     public function __construct(
         public string $documentId,
     ) {}
 
-    /**
-     * The number of seconds to wait before retrying the job.
-     *
-     * @return list<int>
-     */
+    /** @return list<int> */
     public function backoff(): array
     {
         return [10, 30, 60];
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
         // The crawl was cancelled (allowFailures() keeps it running on a job failure, but
@@ -77,13 +68,14 @@ class ProcessPageJob implements ShouldQueue
             $response = Http::timeout(20)
                 ->connectTimeout(5)
                 ->retry(2, 300, throw: false)
+                ->withOptions(['allow_redirects' => SafeUrl::guardedRedirects()])
                 ->get($document->source_url);
 
             // Surface a non-2xx response as an exception so it routes through the failure
             // handling below (status => failed, then rethrow for the batch).
             $response->throw();
 
-            $body = substr($response->body(), 0, self::MAX_PAGE_BYTES);
+            $body = substr($response->body(), 0, self::MaxPageBytes);
             $extracted = $this->extractReadableText($body);
 
             $chunks = (new TextChunker)->chunk($extracted['text']);
@@ -114,7 +106,7 @@ class ProcessPageJob implements ShouldQueue
             EmbedChunksJob::dispatch($document->agent_id);
 
             // Follow internal links so the whole site is crawled, not just the seed /
-            // sitemap URLs. Bounded by MAX_PAGES.
+            // sitemap URLs. Bounded by MaxPages.
             $this->crawlLinkedPages($document, $body);
         } catch (Throwable $exception) {
             // Mark failed and rethrow so the batch records the failure. failed() below is
@@ -152,7 +144,7 @@ class ProcessPageJob implements ShouldQueue
         // Strip chrome/non-content elements before reading the remaining text.
         $selector = implode(' | ', array_map(
             static fn (string $tag): string => "//{$tag}",
-            self::NON_CONTENT_TAGS,
+            self::NonContentTags,
         ));
 
         $chrome = $xpath->query($selector);
@@ -188,7 +180,7 @@ class ProcessPageJob implements ShouldQueue
     /**
      * Discover same-host links on this page and queue any not-yet-seen ones for crawling,
      * so the whole site is ingested by following links. Idempotent (firstOrCreate) and
-     * bounded by CrawlSiteJob::MAX_PAGES.
+     * bounded by CrawlSiteJob::MaxPages.
      */
     private function crawlLinkedPages(Document $document, string $html): void
     {
@@ -199,12 +191,12 @@ class ProcessPageJob implements ShouldQueue
             ->where('type', DocumentType::Web)
             ->count();
 
-        if ($count >= CrawlSiteJob::MAX_PAGES) {
+        if ($count >= CrawlSiteJob::MaxPages) {
             return;
         }
 
         foreach ($this->discoverLinks($html, (string) $document->source_url) as $url) {
-            if ($count >= CrawlSiteJob::MAX_PAGES) {
+            if ($count >= CrawlSiteJob::MaxPages) {
                 break;
             }
 

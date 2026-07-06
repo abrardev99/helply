@@ -16,10 +16,7 @@ use Laravel\Ai\Responses\Data\RankedDocument;
 
 class ChunkRetriever
 {
-    public function __construct(private ResolvesTenantKey $keys)
-    {
-        //
-    }
+    public function __construct(private ResolvesTenantKey $keys) {}
 
     /**
      * Retrieve the most relevant chunks for a question in two stages: a wide pgvector
@@ -87,12 +84,12 @@ class ChunkRetriever
             ->limit($topN)
             ->rerank($question);
 
-        $hits = array_map(
+        $hits = array_values(array_map(
             fn (RankedDocument $result): RetrievalHit => $this->hit($ordered[$result->index], $result->score),
             $response->results,
-        );
+        ));
 
-        return new RetrievalResult($hits, $response->first()?->score ?? 0.0, reranked: true);
+        return new RetrievalResult($hits, $hits === [] ? 0.0 : $hits[0]->score, reranked: true);
     }
 
     /**
@@ -102,11 +99,10 @@ class ChunkRetriever
     {
         Log::info('Retrieval reranking skipped: no rerank provider key configured.');
 
-        $hits = $candidates
+        $hits = array_values($candidates
             ->take($topN)
             ->map(fn (Chunk $chunk): RetrievalHit => $this->hit($chunk, $this->similarity($chunk)))
-            ->values()
-            ->all();
+            ->all());
 
         return new RetrievalResult($hits, $hits === [] ? 0.0 : $hits[0]->score, reranked: false);
     }

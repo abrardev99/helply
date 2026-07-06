@@ -11,7 +11,7 @@ class ContextPacker
      * Character budget for the packed context. Roughly ~2k tokens, comfortably within a
      * chat request alongside the system prompt and history.
      */
-    private const MAX_CHARS = 8000;
+    private const MaxChars = 8000;
 
     /**
      * Turn retrieved hits into a single citation-marked context string plus an aligned
@@ -27,7 +27,7 @@ class ContextPacker
             $marker++;
             $block = "[{$marker}] {$hit->content}\n\n";
 
-            if ($context !== '' && strlen($context) + strlen($block) > self::MAX_CHARS) {
+            if ($context !== '' && strlen($context) + strlen($block) > self::MaxChars) {
                 break;
             }
 

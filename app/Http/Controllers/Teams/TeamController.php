@@ -19,9 +19,6 @@ use Inertia\Response;
 
 class TeamController extends Controller
 {
-    /**
-     * Display a listing of the user's teams.
-     */
     public function index(Request $request): Response
     {
         $user = $request->user();
@@ -31,9 +28,6 @@ class TeamController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created team.
-     */
     public function store(SaveTeamRequest $request, CreateTeam $createTeam): RedirectResponse
     {
         $team = $createTeam->handle($request->user(), $request->validated('name'));
@@ -43,9 +37,6 @@ class TeamController extends Controller
         return to_route('teams.edit', ['team' => $team->slug]);
     }
 
-    /**
-     * Show the team edit page.
-     */
     public function edit(Request $request, Team $team): Response
     {
         $user = $request->user();
@@ -86,9 +77,6 @@ class TeamController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified team.
-     */
     public function update(SaveTeamRequest $request, Team $team): RedirectResponse
     {
         Gate::authorize('update', $team);
@@ -106,9 +94,6 @@ class TeamController extends Controller
         return to_route('teams.edit', ['team' => $team->slug]);
     }
 
-    /**
-     * Switch the user's current team.
-     */
     public function switch(Request $request, Team $team): RedirectResponse
     {
         abort_unless($request->user()->belongsToTeam($team), 403);
@@ -118,9 +103,6 @@ class TeamController extends Controller
         return back();
     }
 
-    /**
-     * Leave the specified team.
-     */
     public function leave(Request $request, Team $team): RedirectResponse
     {
         Gate::authorize('leave', $team);
@@ -144,9 +126,6 @@ class TeamController extends Controller
         return to_route('teams.index');
     }
 
-    /**
-     * Delete the specified team.
-     */
     public function destroy(DeleteTeamRequest $request, Team $team): RedirectResponse
     {
         $user = $request->user();

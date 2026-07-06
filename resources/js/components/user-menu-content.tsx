@@ -19,10 +19,10 @@ type Props = {
 export function UserMenuContent({ user }: Props) {
     const cleanup = useMobileNavigation();
 
-    const handleLogout = () => {
+    function handleLogout() {
         cleanup();
         router.flushAll();
-    };
+    }
 
     return (
         <>

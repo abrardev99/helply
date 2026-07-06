@@ -18,28 +18,19 @@ class ImportPdfJob implements ShouldQueue
 {
     use Queueable;
 
-    /**
-     * The number of times the job may be attempted.
-     */
     public int $tries = 3;
 
     public function __construct(
         public string $documentId,
     ) {}
 
-    /**
-     * The number of seconds to wait before retrying the job.
-     *
-     * @return list<int>
-     */
+    /** @return list<int> */
     public function backoff(): array
     {
         return [10, 30, 60];
     }
 
     /**
-     * Execute the job.
-     *
      * Mirrors ProcessPageJob: idempotent delete-then-insert of chunks, status
      * transitions, and a failure handler so a document never stays stuck in
      * 'processing'. One chunk is produced per page of extractable text; token-aware

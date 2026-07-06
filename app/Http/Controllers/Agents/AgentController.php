@@ -17,9 +17,6 @@ use Inertia\Response;
 
 class AgentController extends Controller
 {
-    /**
-     * Display a listing of the current team's agents.
-     */
     public function index(Request $request): Response
     {
         Gate::authorize('viewAny', Agent::class);
@@ -45,9 +42,6 @@ class AgentController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new agent.
-     */
     public function create(): Response
     {
         Gate::authorize('create', Agent::class);
@@ -55,9 +49,6 @@ class AgentController extends Controller
         return Inertia::render('agents/create');
     }
 
-    /**
-     * Store a newly created agent.
-     */
     public function store(StoreAgentRequest $request): RedirectResponse
     {
         $agent = $request->user()->currentTeam->agents()->create([
@@ -70,9 +61,6 @@ class AgentController extends Controller
         return to_route('agents.show', ['agent' => $agent]);
     }
 
-    /**
-     * Display the specified agent.
-     */
     public function show(Request $request, string $currentTeam, Agent $agent): Response
     {
         Gate::authorize('view', $agent);
@@ -108,9 +96,6 @@ class AgentController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified agent.
-     */
     public function edit(string $currentTeam, Agent $agent): Response
     {
         Gate::authorize('update', $agent);
@@ -130,9 +115,6 @@ class AgentController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified agent.
-     */
     public function update(UpdateAgentRequest $request, string $currentTeam, Agent $agent): RedirectResponse
     {
         $data = [
@@ -155,9 +137,6 @@ class AgentController extends Controller
         return to_route('agents.edit', ['agent' => $agent]);
     }
 
-    /**
-     * Remove the specified agent.
-     */
     public function destroy(string $currentTeam, Agent $agent): RedirectResponse
     {
         Gate::authorize('delete', $agent);

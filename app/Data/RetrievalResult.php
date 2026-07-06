@@ -11,9 +11,7 @@ class RetrievalResult
         public array $hits,
         public float $topScore,
         public bool $reranked,
-    ) {
-        //
-    }
+    ) {}
 
     /**
      * An empty result — nothing relevant was found. Feeds guardrail #1 (F10).

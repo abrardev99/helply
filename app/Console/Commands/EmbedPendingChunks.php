@@ -13,8 +13,6 @@ use Illuminate\Console\Command;
 class EmbedPendingChunks extends Command
 {
     /**
-     * Execute the console command.
-     *
      * Keys the work off the Agent (one EmbedChunksJob per agent) so a agent's pending chunks are
      * embedded together in batched API calls. The job only touches NULL embeddings, so a
      * tick that overlaps an in-flight run is harmless.

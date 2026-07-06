@@ -11,33 +11,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Chunk extends Model
 {
     /** @use HasFactory<ChunkFactory> */
-    use HasFactory, HasUuids;
+    use HasFactory;
 
-    /**
-     * Get the agent that owns the chunk.
-     *
-     * @return BelongsTo<Agent, $this>
-     */
+    use HasUuids;
+
+    /** @return BelongsTo<Agent, $this> */
     public function agent(): BelongsTo
     {
         return $this->belongsTo(Agent::class);
     }
 
-    /**
-     * Get the document that owns the chunk.
-     *
-     * @return BelongsTo<Document, $this>
-     */
+    /** @return BelongsTo<Document, $this> */
     public function document(): BelongsTo
     {
         return $this->belongsTo(Document::class);
     }
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    /** @return array<string, string> */
     protected function casts(): array
     {
         return [

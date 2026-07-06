@@ -15,9 +15,7 @@ class AnswerGenerator
     public function __construct(
         private ResolvesTenantKey $keys,
         private ContextPacker $packer,
-    ) {
-        //
-    }
+    ) {}
 
     /**
      * Produce a grounded answer to a question from the retrieved chunks, using the agent's

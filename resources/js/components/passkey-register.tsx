@@ -33,7 +33,7 @@ export default function PasskeyRegistration({ onSuccess }: Props) {
         },
     });
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
 
         if (!name.trim()) {
@@ -41,12 +41,12 @@ export default function PasskeyRegistration({ onSuccess }: Props) {
         }
 
         await register(name);
-    };
+    }
 
-    const handleCancel = () => {
+    function handleCancel() {
         setShowForm(false);
         setName('');
-    };
+    }
 
     if (!isSupported) {
         return (

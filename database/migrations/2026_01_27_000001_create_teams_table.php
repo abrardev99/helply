@@ -42,14 +42,4 @@ return new class extends Migration
             $table->timestamps();
         });
     }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('team_invitations');
-        Schema::dropIfExists('team_members');
-        Schema::dropIfExists('teams');
-    }
 };

@@ -19,7 +19,7 @@ export type UseTwoFactorAuthReturn = {
 
 export const OTP_MAX_LENGTH = 6;
 
-export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
+export function useTwoFactorAuth(): UseTwoFactorAuthReturn {
     const { submit } = useHttp();
 
     const [qrCodeSvg, setQrCodeSvg] = useState<string | null>(null);
@@ -108,4 +108,4 @@ export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
         fetchSetupData,
         fetchRecoveryCodes,
     };
-};
+}

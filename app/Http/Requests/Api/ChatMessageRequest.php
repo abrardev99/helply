@@ -15,15 +15,11 @@ class ChatMessageRequest extends FormRequest
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
+    /** @return array<string, ValidationRule|array<mixed>|string> */
     public function rules(): array
     {
         return [
-            'session_id' => ['nullable', 'string', 'max:255'],
+            'session_id' => ['nullable', 'string', 'max:1024'],
             'message' => ['required', 'string', 'max:2000'],
         ];
     }

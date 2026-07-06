@@ -8,6 +8,7 @@ use App\Data\RetrievalResult;
 use App\Models\Agent;
 use Illuminate\Support\Str;
 use Laravel\Ai\Enums\Lab;
+use Laravel\Ai\Responses\StructuredAgentResponse;
 
 class Guardrail
 {
@@ -15,7 +16,7 @@ class Guardrail
      * Phrases that indicate the model itself declined to answer. Such a reply is not a
      * hallucination, so it is safe to pass through without the LLM grounding check.
      */
-    private const REFUSAL_MARKERS = [
+    private const RefusalMarkers = [
         "don't have that information",
         'do not have that information',
         "can't help",
@@ -24,10 +25,7 @@ class Guardrail
         'could not find',
     ];
 
-    public function __construct(private ResolvesTenantKey $keys)
-    {
-        //
-    }
+    public function __construct(private ResolvesTenantKey $keys) {}
 
     /**
      * Guardrail #1 — relevance gate (no LLM call). Passes only when the retrieval found
@@ -57,7 +55,11 @@ class Guardrail
         $verdict = $this->keys->withTenantKey($agent, fn () => (new GroundingChecker)
             ->prompt($this->groundingPrompt($answer, $retrieval), provider: Lab::OpenAI, model: $agent->chat_model));
 
-        return (bool) ($verdict['grounded'] ?? false);
+        if (! $verdict instanceof StructuredAgentResponse) {
+            return false;
+        }
+
+        return (bool) ($verdict->structured['grounded'] ?? false);
     }
 
     /**
@@ -82,7 +84,7 @@ class Guardrail
 
     private function looksLikeRefusal(string $answer): bool
     {
-        return Str::contains(Str::lower($answer), self::REFUSAL_MARKERS);
+        return Str::contains(Str::lower($answer), self::RefusalMarkers);
     }
 
     private function groundingPrompt(string $answer, RetrievalResult $retrieval): string

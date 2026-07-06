@@ -31,9 +31,6 @@ class TeamInvitation extends Model
     /** @use HasFactory<TeamInvitationFactory> */
     use HasFactory;
 
-    /**
-     * Bootstrap the model and its traits.
-     */
     protected static function boot(): void
     {
         parent::boot();
@@ -45,55 +42,34 @@ class TeamInvitation extends Model
         });
     }
 
-    /**
-     * Get the team that the invitation belongs to.
-     *
-     * @return BelongsTo<Team, $this>
-     */
+    /** @return BelongsTo<Team, $this> */
     public function team(): BelongsTo
     {
         return $this->belongsTo(Team::class);
     }
 
-    /**
-     * Get the user who sent the invitation.
-     *
-     * @return BelongsTo<User, $this>
-     */
+    /** @return BelongsTo<User, $this> */
     public function inviter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'invited_by');
     }
 
-    /**
-     * Determine if the invitation has been accepted.
-     */
     public function isAccepted(): bool
     {
         return $this->accepted_at !== null;
     }
 
-    /**
-     * Determine if the invitation is pending.
-     */
     public function isPending(): bool
     {
         return $this->accepted_at === null && ! $this->isExpired();
     }
 
-    /**
-     * Determine if the invitation has expired.
-     */
     public function isExpired(): bool
     {
         return $this->expires_at !== null && $this->expires_at->isPast();
     }
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    /** @return array<string, string> */
     protected function casts(): array
     {
         return [
@@ -103,9 +79,6 @@ class TeamInvitation extends Model
         ];
     }
 
-    /**
-     * Get the route key for the model.
-     */
     public function getRouteKeyName(): string
     {
         return 'code';

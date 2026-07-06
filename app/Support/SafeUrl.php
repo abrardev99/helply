@@ -4,6 +4,7 @@ namespace App\Support;
 
 use GuzzleHttp\Psr7\UriNormalizer;
 use GuzzleHttp\Psr7\Utils;
+use RuntimeException;
 use Throwable;
 
 class SafeUrl
@@ -12,7 +13,7 @@ class SafeUrl
      * Schemes we are willing to fetch over. Anything else (file://, gopher://,
      * ftp://, …) is a classic SSRF vector and is rejected outright.
      */
-    private const ALLOWED_SCHEMES = ['http', 'https'];
+    private const AllowedSchemes = ['http', 'https'];
 
     /**
      * Canonicalize a URL so equivalent variants collapse to one key — lowercased
@@ -91,6 +92,27 @@ class SafeUrl
     }
 
     /**
+     * Guzzle `allow_redirects` config that re-validates every redirect hop with isPublic(),
+     * closing the SSRF hole where an allowed URL responds with a 3xx to an internal host.
+     * A hop to a non-public target throws, aborting the fetch.
+     *
+     * @return array<string, mixed>
+     */
+    public static function guardedRedirects(int $max = 5): array
+    {
+        return [
+            'max' => $max,
+            'strict' => true,
+            'protocols' => self::AllowedSchemes,
+            'on_redirect' => function ($request, $response, $uri): void {
+                if (! self::isPublic((string) $uri)) {
+                    throw new RuntimeException("Blocked redirect to a non-public URL: {$uri}");
+                }
+            },
+        ];
+    }
+
+    /**
      * Parse and validate the scheme, returning the (bracket-stripped) host or null when
      * the URL is malformed or uses a disallowed scheme.
      */
@@ -102,7 +124,7 @@ class SafeUrl
             return null;
         }
 
-        if (! in_array(strtolower($parts['scheme']), self::ALLOWED_SCHEMES, true)) {
+        if (! in_array(strtolower($parts['scheme']), self::AllowedSchemes, true)) {
             return null;
         }
 

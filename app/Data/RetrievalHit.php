@@ -9,7 +9,5 @@ class RetrievalHit
         public string $documentId,
         public string $content,
         public float $score,
-    ) {
-        //
-    }
+    ) {}
 }

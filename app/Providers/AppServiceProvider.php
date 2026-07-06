@@ -26,17 +26,8 @@ use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
-    public function register(): void
-    {
-        //
-    }
+    public function register(): void {}
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         $this->configureDefaults();
@@ -107,15 +98,26 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Rate limiter for the public widget chat endpoint: throttled per agent and per client
-     * IP to protect the customer's OpenAI spend and the app from floods.
+     * Rate limiter for the public widget chat endpoint: throttled per agent + client IP to
+     * absorb floods, plus a coarse per-agent daily cap so a distributed client pool cannot
+     * run up the customer's OpenAI spend past what the per-IP limit alone would allow.
      */
     private function configureRateLimiting(): void
     {
-        RateLimiter::for('widget-chat', function (Request $request): Limit {
-            $agentId = $request->route('agent')?->id ?? 'unknown';
+        RateLimiter::for('widget-chat', $this->widgetChatLimits(...));
+    }
 
-            return Limit::perMinute(30)->by($agentId.'|'.$request->ip());
-        });
+    /**
+     * @return array<int, Limit>
+     */
+    private function widgetChatLimits(Request $request): array
+    {
+        $agent = $request->route('agent');
+        $agentId = $agent instanceof Agent ? $agent->id : 'unknown';
+
+        return [
+            Limit::perMinute(30)->by("{$agentId}|{$request->ip()}"),
+            Limit::perDay((int) config('widget.daily_cap'))->by("agent:{$agentId}"),
+        ];
     }
 }

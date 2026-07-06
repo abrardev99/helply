@@ -16,9 +16,7 @@ class ChatPipeline
         private ChunkRetriever $retriever,
         private Guardrail $guardrail,
         private AnswerGenerator $generator,
-    ) {
-        //
-    }
+    ) {}
 
     /**
      * Answer a visitor question end-to-end with both guardrails:

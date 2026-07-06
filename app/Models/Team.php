@@ -31,12 +31,14 @@ use Illuminate\Support\Carbon;
 #[Fillable(['name', 'slug', 'is_personal'])]
 class Team extends Model
 {
+    use GeneratesUniqueTeamSlugs;
+
     /** @use HasFactory<TeamFactory> */
-    use GeneratesUniqueTeamSlugs, HasFactory, SoftDeletes;
+    use HasFactory;
+
+    use SoftDeletes;
 
     /**
-     * The attributes that should be hidden from array/JSON serialization.
-     *
      * Keeps the decrypted OpenAI key out of any Inertia/JSON payload, even when the team
      * is serialized as a relation of another model.
      *
@@ -44,9 +46,6 @@ class Team extends Model
      */
     protected $hidden = ['openai_api_key'];
 
-    /**
-     * Bootstrap the model and its traits.
-     */
     protected static function boot(): void
     {
         parent::boot();
@@ -64,9 +63,6 @@ class Team extends Model
         });
     }
 
-    /**
-     * Get the team owner.
-     */
     public function owner(): ?Model
     {
         return $this->members()
@@ -74,11 +70,7 @@ class Team extends Model
             ->first();
     }
 
-    /**
-     * Get all members of this team.
-     *
-     * @return BelongsToMany<User, $this, Membership, 'pivot'>
-     */
+    /** @return BelongsToMany<User, $this, Membership, 'pivot'> */
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'team_members', 'team_id', 'user_id')
@@ -87,41 +79,25 @@ class Team extends Model
             ->withTimestamps();
     }
 
-    /**
-     * Get all memberships for this team.
-     *
-     * @return HasMany<Membership, $this>
-     */
+    /** @return HasMany<Membership, $this> */
     public function memberships(): HasMany
     {
         return $this->hasMany(Membership::class);
     }
 
-    /**
-     * Get all invitations for this team.
-     *
-     * @return HasMany<TeamInvitation, $this>
-     */
+    /** @return HasMany<TeamInvitation, $this> */
     public function invitations(): HasMany
     {
         return $this->hasMany(TeamInvitation::class);
     }
 
-    /**
-     * Get all agents for this team.
-     *
-     * @return HasMany<Agent, $this>
-     */
+    /** @return HasMany<Agent, $this> */
     public function agents(): HasMany
     {
         return $this->hasMany(Agent::class);
     }
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    /** @return array<string, string> */
     protected function casts(): array
     {
         return [
@@ -130,9 +106,6 @@ class Team extends Model
         ];
     }
 
-    /**
-     * Get the route key for the model.
-     */
     public function getRouteKeyName(): string
     {
         return 'slug';

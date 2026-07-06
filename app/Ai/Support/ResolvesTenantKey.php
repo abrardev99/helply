@@ -5,6 +5,7 @@ namespace App\Ai\Support;
 use App\Ai\Exceptions\MissingOpenAiKeyException;
 use App\Models\Agent;
 use Closure;
+use Laravel\Ai\Ai;
 
 class ResolvesTenantKey
 {
@@ -30,10 +31,11 @@ class ResolvesTenantKey
     /**
      * Run a callback with the tenant's OpenAI key applied to the AI SDK configuration.
      *
-     * The override is set on the shared config for the duration of the callback. This is
-     * only safe because each embed runs inside an isolated queue job and each chat inside
-     * a single web request — one PHP process handles one tenant at a time — so the key
-     * never bleeds across tenants. The previous value is always restored afterwards.
+     * The AiManager memoizes each provider instance with the key captured at construction,
+     * so swapping the config key is not enough on its own — the cached "openai" instance
+     * must be forgotten so it is rebuilt with the tenant key. Both are restored afterwards,
+     * which keeps the swap correct even in a long-lived queue worker where one process
+     * serves many tenants.
      *
      * @template TReturn
      *
@@ -47,11 +49,13 @@ class ResolvesTenantKey
         $previous = config('ai.providers.openai.key');
 
         config(['ai.providers.openai.key' => $key]);
+        Ai::forgetInstance('openai');
 
         try {
             return $callback();
         } finally {
             config(['ai.providers.openai.key' => $previous]);
+            Ai::forgetInstance('openai');
         }
     }
 }

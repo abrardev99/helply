@@ -15,7 +15,5 @@ class ChatResult
         public array $sources,
         public float $retrievalScore,
         public bool $flagged,
-    ) {
-        //
-    }
+    ) {}
 }

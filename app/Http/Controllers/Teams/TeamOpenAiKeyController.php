@@ -12,8 +12,6 @@ use Inertia\Inertia;
 class TeamOpenAiKeyController extends Controller
 {
     /**
-     * Set or replace the team's OpenAI API key.
-     *
      * The key is assigned explicitly (never mass-assigned from request input) and stored
      * through the model's `encrypted` cast, so it is encrypted at rest and never echoed
      * back to the browser.
@@ -28,9 +26,6 @@ class TeamOpenAiKeyController extends Controller
         return to_route('teams.edit', ['team' => $team->slug]);
     }
 
-    /**
-     * Remove the team's OpenAI API key.
-     */
     public function destroy(Team $team): RedirectResponse
     {
         Gate::authorize('update', $team);

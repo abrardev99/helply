@@ -12,9 +12,6 @@ class GroundingChecker implements Agent, HasStructuredOutput
 {
     use Promptable;
 
-    /**
-     * Get the instructions that the agent should follow.
-     */
     public function instructions(): Stringable|string
     {
         return implode("\n", [
@@ -26,9 +23,6 @@ class GroundingChecker implements Agent, HasStructuredOutput
         ]);
     }
 
-    /**
-     * Get the agent's structured output schema definition.
-     */
     public function schema(JsonSchema $schema): array
     {
         return [

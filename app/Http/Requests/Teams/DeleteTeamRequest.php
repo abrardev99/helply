@@ -11,19 +11,12 @@ use Illuminate\Validation\Validator;
 
 class DeleteTeamRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return Gate::allows('delete', $this->route('team'));
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
+    /** @return array<string, ValidationRule|array<mixed>|string> */
     public function rules(): array
     {
         return [
@@ -31,11 +24,7 @@ class DeleteTeamRequest extends FormRequest
         ];
     }
 
-    /**
-     * Configure the validator instance.
-     *
-     * @return array<int, Closure(Validator): void>
-     */
+    /** @return array<int, Closure(Validator): void> */
     public function after(): array
     {
         return [
@@ -47,9 +36,6 @@ class DeleteTeamRequest extends FormRequest
         ];
     }
 
-    /**
-     * Get the team associated with the request.
-     */
     private function team(): Team
     {
         $team = $this->route('team');

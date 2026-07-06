@@ -2,7 +2,7 @@
 
 namespace App\Data;
 
-readonly class TeamPermissions
+class TeamPermissions
 {
     public function __construct(
         public bool $canUpdateTeam,
@@ -13,7 +13,5 @@ readonly class TeamPermissions
         public bool $canCreateInvitation,
         public bool $canCancelInvitation,
         public bool $canManageAgents,
-    ) {
-        //
-    }
+    ) {}
 }

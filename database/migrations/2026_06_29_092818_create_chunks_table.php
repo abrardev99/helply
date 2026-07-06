@@ -28,12 +28,4 @@ return new class extends Migration
 
         DB::statement('CREATE INDEX ON chunks USING hnsw (embedding vector_cosine_ops)');
     }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('chunks');
-    }
 };

@@ -7,9 +7,6 @@ enum DocumentType: string
     case Web = 'web';
     case Pdf = 'pdf';
 
-    /**
-     * Get the display label for the type.
-     */
     public function label(): string
     {
         return match ($this) {

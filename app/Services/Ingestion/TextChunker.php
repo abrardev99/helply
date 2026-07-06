@@ -8,13 +8,13 @@ class TextChunker
      * Target maximum chunk size in characters. At a ~4-chars-per-token heuristic this is
      * roughly 750 tokens, near the top of the 500–800 token target range.
      */
-    private const MAX_CHARS = 3000;
+    private const MaxChars = 3000;
 
     /**
      * How much of the previous chunk's tail to repeat at the start of the next chunk, so
-     * context that straddles a boundary is not lost. ~13% of MAX_CHARS.
+     * context that straddles a boundary is not lost. ~13% of MaxChars.
      */
-    private const OVERLAP_CHARS = 400;
+    private const OverlapChars = 400;
 
     /**
      * Split document text into retrieval-sized, slightly overlapping chunks, preferring
@@ -30,7 +30,7 @@ class TextChunker
             return [];
         }
 
-        if (strlen($text) <= self::MAX_CHARS) {
+        if (strlen($text) <= self::MaxChars) {
             return [$text];
         }
 
@@ -40,7 +40,7 @@ class TextChunker
         foreach ($this->segments($text) as $segment) {
             $candidate = $current === '' ? $segment : $current.' '.$segment;
 
-            if (strlen($candidate) <= self::MAX_CHARS) {
+            if (strlen($candidate) <= self::MaxChars) {
                 $current = $candidate;
 
                 continue;
@@ -48,13 +48,13 @@ class TextChunker
 
             // The segment does not fit: flush the current chunk and start a new one that
             // begins with an overlap of the previous chunk's tail (dropped if that would
-            // itself overflow, keeping every chunk within MAX_CHARS).
+            // itself overflow, keeping every chunk within MaxChars).
             if ($current !== '') {
                 $chunks[] = $current;
 
                 $current = trim($this->tail($current).' '.$segment);
 
-                if (strlen($current) > self::MAX_CHARS) {
+                if (strlen($current) > self::MaxChars) {
                     $current = $segment;
                 }
 
@@ -73,7 +73,7 @@ class TextChunker
 
     /**
      * Break text into sentence segments, hard-splitting any single sentence that is longer
-     * than MAX_CHARS on word boundaries.
+     * than MaxChars on word boundaries.
      *
      * @return list<string>
      */
@@ -84,7 +84,7 @@ class TextChunker
         $segments = [];
 
         foreach ($sentences as $sentence) {
-            if (strlen($sentence) <= self::MAX_CHARS) {
+            if (strlen($sentence) <= self::MaxChars) {
                 $segments[] = $sentence;
 
                 continue;
@@ -99,7 +99,7 @@ class TextChunker
     }
 
     /**
-     * Split an over-long sentence into word-bounded pieces no larger than MAX_CHARS.
+     * Split an over-long sentence into word-bounded pieces no larger than MaxChars.
      *
      * @return list<string>
      */
@@ -111,7 +111,7 @@ class TextChunker
         foreach (explode(' ', $sentence) as $word) {
             $candidate = $buffer === '' ? $word : $buffer.' '.$word;
 
-            if (strlen($candidate) > self::MAX_CHARS && $buffer !== '') {
+            if (strlen($candidate) > self::MaxChars && $buffer !== '') {
                 $pieces[] = $buffer;
                 $buffer = $word;
 
@@ -129,16 +129,16 @@ class TextChunker
     }
 
     /**
-     * The last OVERLAP_CHARS of a chunk, trimmed forward to the next word boundary so the
+     * The last OverlapChars of a chunk, trimmed forward to the next word boundary so the
      * overlap does not start with a partial word.
      */
     private function tail(string $chunk): string
     {
-        if (strlen($chunk) <= self::OVERLAP_CHARS) {
+        if (strlen($chunk) <= self::OverlapChars) {
             return $chunk;
         }
 
-        $tail = substr($chunk, -self::OVERLAP_CHARS);
+        $tail = substr($chunk, -self::OverlapChars);
         $spacePosition = strpos($tail, ' ');
 
         return $spacePosition === false ? $tail : substr($tail, $spacePosition + 1);

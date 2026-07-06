@@ -9,8 +9,6 @@ use Illuminate\Translation\PotentiallyTranslatedString;
 class Origin implements ValidationRule
 {
     /**
-     * Run the validation rule.
-     *
      * An origin is a bare scheme + host (+ optional port) with no path,
      * query, fragment, or credentials — e.g. `https://app.example.com`.
      *

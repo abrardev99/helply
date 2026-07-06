@@ -11,11 +11,7 @@ use Illuminate\Validation\Rule;
 
 class CreateTeamInvitationRequest extends FormRequest
 {
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
+    /** @return array<string, ValidationRule|array<mixed>|string> */
     public function rules(): array
     {
         $team = $this->route('team');
@@ -24,7 +20,7 @@ class CreateTeamInvitationRequest extends FormRequest
 
         return [
             'email' => ['required', 'string', 'email', 'max:255', new UniqueTeamInvitation($team)],
-            'role' => ['required', 'string', Rule::enum(TeamRole::class)],
+            'role' => ['required', 'string', Rule::in(array_column(TeamRole::assignable(), 'value'))],
         ];
     }
 }

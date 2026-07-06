@@ -10,16 +10,9 @@ use Illuminate\Translation\PotentiallyTranslatedString;
 
 class ValidTeamInvitation implements ValidationRule
 {
-    public function __construct(protected ?User $user)
-    {
-        //
-    }
+    public function __construct(protected ?User $user) {}
 
-    /**
-     * Run the validation rule.
-     *
-     * @param  Closure(string, ?string=): PotentiallyTranslatedString  $fail
-     */
+    /** @param  Closure(string, ?string=): PotentiallyTranslatedString  $fail */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (! $value instanceof TeamInvitation || ! $this->user instanceof User) {

@@ -7,7 +7,7 @@ use RuntimeException;
 
 class MissingOpenAiKeyException extends RuntimeException
 {
-    public function __construct(public readonly Agent $agent)
+    public function __construct(public Agent $agent)
     {
         parent::__construct("No OpenAI API key is configured for agent [{$agent->id}] or its team.");
     }

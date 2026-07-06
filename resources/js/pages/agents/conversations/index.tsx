@@ -93,12 +93,13 @@ export default function ConversationsIndex({
                         data-test="filter-flagged"
                     >
                         <Link
-                            href={
-                                conversations.index({
+                            href={conversations.index(
+                                {
                                     current_team: currentTeam.slug,
                                     agent: agent.id,
-                                }).url + '?flagged=1'
-                            }
+                                },
+                                { query: { flagged: 1 } },
+                            )}
                         >
                             Flagged only
                         </Link>

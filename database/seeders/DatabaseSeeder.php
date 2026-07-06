@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Enums\AgentStatus;
 use App\Enums\DocumentStatus;
+use App\Enums\DocumentType;
 use App\Models\Agent;
 use App\Models\Document;
 use App\Models\User;
@@ -13,13 +15,8 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
-
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
@@ -34,11 +31,11 @@ class DatabaseSeeder extends Seeder
         $agent = Agent::factory()->for($abrar->currentTeam)->create([
             'name' => 'Abrar.pro Assistant',
             'embed_origins' => ['https://www.abrar.pro'],
-            'status' => 'active',
+            'status' => AgentStatus::Active,
         ]);
 
         Document::factory()->for($agent)->create([
-            'type' => 'web',
+            'type' => DocumentType::Web,
             'source_url' => 'https://www.abrar.pro/',
             'title' => 'Abrar.pro',
             'status' => DocumentStatus::Done,

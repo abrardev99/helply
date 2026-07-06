@@ -8,19 +8,12 @@ enum TeamRole: string
     case Admin = 'admin';
     case Member = 'member';
 
-    /**
-     * Get the display label for the role.
-     */
     public function label(): string
     {
         return ucfirst($this->value);
     }
 
-    /**
-     * Get all the permissions for this role.
-     *
-     * @return array<TeamPermission>
-     */
+    /** @return array<TeamPermission> */
     public function permissions(): array
     {
         return match ($this) {
@@ -35,16 +28,12 @@ enum TeamRole: string
         };
     }
 
-    /**
-     * Determine if the role has the given permission.
-     */
     public function hasPermission(TeamPermission $permission): bool
     {
         return in_array($permission, $this->permissions());
     }
 
     /**
-     * Get the hierarchy level for this role.
      * Higher numbers indicate higher privileges.
      */
     public function level(): int
@@ -64,11 +53,7 @@ enum TeamRole: string
         return $this->level() >= $role->level();
     }
 
-    /**
-     * Get the roles that can be assigned to team members (excludes Owner).
-     *
-     * @return array<array{value: string, label: string}>
-     */
+    /** @return array<array{value: string, label: string}> */
     public static function assignable(): array
     {
         return collect(self::cases())

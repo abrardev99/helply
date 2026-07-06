@@ -11,7 +11,5 @@ class PackedContext
     public function __construct(
         public string $context,
         public array $sources,
-    ) {
-        //
-    }
+    ) {}
 }

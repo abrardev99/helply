@@ -11,7 +11,5 @@ class GeneratedAnswer
     public function __construct(
         public string $answer,
         public array $sources,
-    ) {
-        //
-    }
+    ) {}
 }

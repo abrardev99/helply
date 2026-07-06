@@ -26,7 +26,7 @@ class EmbedChunksJob implements ShouldQueue
     /**
      * How many chunk texts to send to the embeddings API per call.
      */
-    private const BATCH_SIZE = 96;
+    private const BatchSize = 96;
 
     /**
      * @param  string  $agentId  The agent whose chunks should be embedded.
@@ -37,19 +37,12 @@ class EmbedChunksJob implements ShouldQueue
         public bool $force = false,
     ) {}
 
-    /**
-     * The number of seconds to wait before retrying the job.
-     *
-     * @return list<int>
-     */
+    /** @return list<int> */
     public function backoff(): array
     {
         return [10, 30, 60];
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(ResolvesTenantKey $keys): void
     {
         $agent = Agent::query()->find($this->agentId);
@@ -83,7 +76,7 @@ class EmbedChunksJob implements ShouldQueue
             ->orderBy('id')
             ->get();
 
-        foreach ($pending->chunk(self::BATCH_SIZE) as $batch) {
+        foreach ($pending->chunk(self::BatchSize) as $batch) {
             $this->embedBatch($agent, $batch->values());
         }
     }

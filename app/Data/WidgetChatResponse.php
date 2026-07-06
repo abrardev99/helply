@@ -14,12 +14,12 @@ class WidgetChatResponse implements Responsable
         public string $answer,
         public array $sources,
         public string $conversationId,
-    ) {
-        //
-    }
+        public string $sessionToken,
+    ) {}
 
     /**
      * Only the visitor-facing fields are serialized — never the OpenAI key or system prompt.
+     * The signed session token is echoed back for the widget to persist and resend.
      */
     public function toResponse($request): JsonResponse
     {
@@ -27,6 +27,7 @@ class WidgetChatResponse implements Responsable
             'answer' => $this->answer,
             'sources' => $this->sources,
             'conversation_id' => $this->conversationId,
+            'session_token' => $this->sessionToken,
         ]);
     }
 }
