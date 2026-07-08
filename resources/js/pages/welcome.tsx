@@ -1,12 +1,5 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
-import {
-    ArrowUp,
-    ChevronDown,
-    ChevronLeft,
-    MoreHorizontal,
-    Smile,
-    X,
-} from 'lucide-react';
+import { ArrowUp, ChevronLeft, MoreHorizontal, Smile, X } from 'lucide-react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -189,7 +182,7 @@ export default function Welcome() {
                         </div>
                     </div>
 
-                    <div className="flex justify-center px-2 pb-8 lg:justify-self-end lg:pb-0">
+                    <div className="flex justify-center px-2 lg:justify-self-end">
                         <SupportAgentPreview />
                     </div>
                 </main>
@@ -287,11 +280,6 @@ function SupportAgentPreview() {
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* Floating collapse button, like a live widget. */}
-            <div className="absolute right-2 -bottom-5 flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
-                <ChevronDown className="size-6" />
             </div>
         </div>
     );
