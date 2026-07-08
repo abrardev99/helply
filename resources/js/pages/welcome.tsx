@@ -1,4 +1,12 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
+import {
+    ArrowUp,
+    ChevronDown,
+    ChevronLeft,
+    MoreHorizontal,
+    Smile,
+    X,
+} from 'lucide-react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -181,7 +189,7 @@ export default function Welcome() {
                         </div>
                     </div>
 
-                    <div className="lg:justify-self-end">
+                    <div className="flex justify-center px-2 pb-8 lg:justify-self-end lg:pb-0">
                         <SupportAgentPreview />
                     </div>
                 </main>
@@ -194,44 +202,96 @@ export default function Welcome() {
     );
 }
 
+const previewAgents = [
+    { initials: 'AM', className: 'bg-rose-200 text-rose-800' },
+    { initials: 'JC', className: 'bg-amber-200 text-amber-900' },
+    { initials: 'SR', className: 'bg-sky-200 text-sky-800' },
+];
+
 /**
- * A static, non-interactive preview of the embedded support agent — shown purely
- * to illustrate what visitors experience on a customer's site.
+ * A static, non-interactive mock of the embedded Support Agent popup — shown purely
+ * to illustrate what visitors experience on a customer's site. It renders like a
+ * floating widget but is inert (no handlers, pointer events disabled).
  */
 function SupportAgentPreview() {
     return (
-        <div className="w-full max-w-sm rounded-2xl border border-border bg-card shadow-sm">
-            <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-                <span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                    <AppLogoIcon className="size-4 fill-current" />
-                </span>
-                <div className="flex-1">
-                    <p className="text-sm font-medium">Support</p>
-                    <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <span className="size-1.5 rounded-full bg-emerald-500" />
-                        Online now
+        <div
+            className="pointer-events-none relative w-full max-w-sm select-none"
+            aria-hidden="true"
+        >
+            {/* Soft glow so the panel lifts off the page. */}
+            <div className="absolute -inset-6 -z-10 rounded-[2.5rem] bg-primary/10 blur-2xl" />
+
+            <div className="overflow-hidden rounded-[1.75rem] border border-border bg-card shadow-2xl ring-1 ring-black/5 dark:ring-white/10">
+                {/* Header */}
+                <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
+                    <ChevronLeft className="size-5 shrink-0 text-muted-foreground" />
+                    <div className="flex -space-x-2">
+                        {previewAgents.map((agent) => (
+                            <span
+                                key={agent.initials}
+                                className={`flex size-7 items-center justify-center rounded-full text-[10px] font-semibold ring-2 ring-card ${agent.className}`}
+                            >
+                                {agent.initials}
+                            </span>
+                        ))}
+                    </div>
+                    <p className="flex-1 truncate text-sm font-semibold">
+                        Helply
                     </p>
+                    <MoreHorizontal className="size-5 shrink-0 text-muted-foreground" />
+                    <X className="size-5 shrink-0 text-muted-foreground" />
+                </div>
+
+                {/* Conversation */}
+                <div className="space-y-5 px-4 py-5">
+                    <div>
+                        <div className="w-fit max-w-[85%] rounded-2xl rounded-bl-md bg-muted px-3.5 py-2.5 text-sm leading-relaxed text-foreground">
+                            Hello! 👋
+                            <br />
+                            How can I help?
+                        </div>
+                        <p className="mt-1.5 text-xs text-muted-foreground">
+                            Helply · Support Agent · Just now
+                        </p>
+                    </div>
+
+                    <div className="flex justify-end">
+                        <div className="max-w-[80%] rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-sm leading-relaxed text-primary-foreground">
+                            Do you offer a yearly plan?
+                        </div>
+                    </div>
+
+                    <div>
+                        <div className="w-fit max-w-[85%] rounded-2xl rounded-bl-md bg-muted px-3.5 py-2.5 text-sm leading-relaxed text-foreground">
+                            Yes — annual billing saves you two months, and you
+                            can switch anytime from your account settings.
+                        </div>
+                        <p className="mt-1.5 text-xs text-muted-foreground">
+                            Helply · Support Agent · Just now
+                        </p>
+                    </div>
+                </div>
+
+                {/* Composer */}
+                <div className="px-3 pb-3">
+                    <div className="rounded-2xl border border-border px-4 py-3">
+                        <p className="text-sm text-muted-foreground">
+                            Message…
+                        </p>
+                        <div className="mt-4 flex items-center justify-between">
+                            <Smile className="size-5 text-muted-foreground" />
+                            <span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                                <ArrowUp className="size-4" />
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div className="space-y-3 px-4 py-5">
-                <div className="flex justify-end">
-                    <p className="max-w-[80%] rounded-2xl rounded-br-sm bg-primary px-3.5 py-2 text-sm text-primary-foreground">
-                        Do you offer a yearly plan?
-                    </p>
-                </div>
-                <div className="flex justify-start">
-                    <p className="max-w-[85%] rounded-2xl rounded-bl-sm bg-muted px-3.5 py-2 text-sm text-foreground">
-                        Yes — annual billing saves you two months, and you can
-                        switch anytime from your account settings.
-                    </p>
-                </div>
-            </div>
-
-            <div className="px-4 pb-4">
-                <div className="flex items-center gap-2 rounded-full border border-border px-4 py-2.5 text-sm text-muted-foreground">
-                    Ask a question…
-                </div>
+            {/* Floating collapse button, like a live widget. */}
+            <div className="absolute right-2 -bottom-5 flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
+                <ChevronDown className="size-6" />
             </div>
         </div>
     );
