@@ -9,11 +9,14 @@ use App\Http\Controllers\Agents\ReembedController;
 use App\Http\Controllers\Agents\WebsiteSourceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Teams\TeamInvitationController;
+use App\Http\Controllers\WaitlistController;
 use App\Http\Controllers\WidgetScriptController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
+
+Route::post('waitlist', [WaitlistController::class, 'store'])->name('waitlist.store');
 
 Route::get('widget.js', WidgetScriptController::class)->name('widget.script');
 
