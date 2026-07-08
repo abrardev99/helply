@@ -174,8 +174,9 @@ export default function Welcome() {
                                                 className="mt-2"
                                             />
                                             <p className="mt-3 text-xs text-muted-foreground">
-                                                One email when we open the
-                                                doors. Nothing else.
+                                                We'll only ever use your email
+                                                for product announcements —
+                                                never anything else.
                                             </p>
                                         </>
                                     )
