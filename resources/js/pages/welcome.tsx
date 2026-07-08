@@ -9,7 +9,7 @@ import { dashboard, login } from '@/routes';
 import { store as joinWaitlist } from '@/routes/waitlist';
 
 export default function Welcome() {
-    const { auth, currentTeam } = usePage().props;
+    const { auth, currentTeam, features } = usePage().props;
     const dashboardUrl = currentTeam ? dashboard(currentTeam.slug) : '/';
 
     return (
@@ -43,12 +43,14 @@ export default function Welcome() {
                             Dashboard
                         </Link>
                     ) : (
-                        <Link
-                            href={login()}
-                            className="text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
-                        >
-                            Log in
-                        </Link>
+                        features.auth && (
+                            <Link
+                                href={login()}
+                                className="text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+                            >
+                                Log in
+                            </Link>
+                        )
                     )}
                 </header>
 
