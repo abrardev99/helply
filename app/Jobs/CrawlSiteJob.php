@@ -69,6 +69,10 @@ class CrawlSiteJob implements ShouldQueue
             ->push($this->seedUrl) // ensure the seed page itself is crawled
             ->map(fn (string $url): string => trim($url))
             ->filter()
+            // Sitemap <loc> values are raw. Canonicalize them the same way link discovery
+            // does, so `https://site.test` and `https://site.test/` (or `/x` and `/x/`)
+            // never become two documents for one page.
+            ->map(fn (string $url): string => SafeUrl::normalize($url))
             // Drop URLs that resolve to private/loopback/link-local targets or use a
             // non-http(s) scheme — an attacker-controlled sitemap could otherwise point
             // the crawler at internal services (SSRF).
@@ -85,7 +89,7 @@ class CrawlSiteJob implements ShouldQueue
 
             // Keep the seed page and fill the rest of the budget with discovered pages by
             // sorting the seed to the front before truncating.
-            $seed = trim($this->seedUrl);
+            $seed = $this->normalizedSeedUrl();
 
             $pageUrls = $pageUrls
                 ->sortByDesc(fn (string $url): bool => $url === $seed)
@@ -310,11 +314,23 @@ class CrawlSiteJob implements ShouldQueue
      */
     private function markSeedAsFailed(): void
     {
+        // Match both forms: the seed row may predate normalization (stored raw) or have
+        // been created by this job in its canonical form.
+        $candidates = array_unique([trim($this->seedUrl), $this->normalizedSeedUrl()]);
+
         Document::query()
             ->where('agent_id', $this->agentId)
-            ->where('source_url', $this->seedUrl)
+            ->whereIn('source_url', $candidates)
             ->whereIn('status', [DocumentStatus::Pending, DocumentStatus::Processing])
             ->update(['status' => DocumentStatus::Failed]);
+    }
+
+    /**
+     * The seed URL in the same canonical form the crawl stores documents under.
+     */
+    private function normalizedSeedUrl(): string
+    {
+        return SafeUrl::normalize(trim($this->seedUrl));
     }
 
     /**

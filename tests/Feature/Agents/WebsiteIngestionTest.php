@@ -237,6 +237,56 @@ it('follows same-host links to crawl the rest of the site', function () {
     Queue::assertPushed(ProcessPageJob::class, 2);
 });
 
+it('does not queue Cloudflare email-protection links', function () {
+    Queue::fake();
+    Http::fake([
+        '*' => Http::response('<html><body><main>Home.</main>'
+            .'<a href="/cdn-cgi/l/email-protection#abc">Email</a>'
+            .'<a href="/about">About</a></body></html>'),
+    ]);
+
+    $agent = Agent::factory()->create();
+    $document = Document::factory()->for($agent)->create([
+        'type' => DocumentType::Web,
+        'source_url' => PUBLIC_HOST.'/',
+        'status' => DocumentStatus::Processing,
+    ]);
+
+    (new ProcessPageJob($document->id))->handle();
+
+    // The obfuscated-mail endpoint always 404s, so it must never become a document.
+    expect($agent->documents()->where('source_url', 'like', '%cdn-cgi%')->exists())->toBeFalse()
+        ->and($agent->documents()->where('source_url', PUBLIC_HOST.'/about')->exists())->toBeTrue();
+
+    Queue::assertPushed(ProcessPageJob::class, 1);
+});
+
+it('collapses sitemap URL variants of one page into a single document', function () {
+    Bus::fake();
+
+    // The same page listed three ways: bare host, trailing slash, and a fragment.
+    $sitemap = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        .'<url><loc>'.PUBLIC_HOST.'</loc></url>'
+        .'<url><loc>'.PUBLIC_HOST.'/</loc></url>'
+        .'<url><loc>'.PUBLIC_HOST.'/docs/</loc></url>'
+        .'<url><loc>'.PUBLIC_HOST.'/docs#intro</loc></url>'
+        .'</urlset>';
+
+    Http::fake([
+        PUBLIC_HOST.'/sitemap.xml' => Http::response($sitemap),
+        '*' => Http::response('<html><body>Content</body></html>'),
+    ]);
+
+    $agent = Agent::factory()->create();
+
+    (new CrawlSiteJob($agent->id, PUBLIC_HOST.'/'))->handle();
+
+    // Four <loc> entries plus the seed describe exactly two pages: `/` and `/docs`.
+    expect($agent->documents()->count())->toBe(2)
+        ->and($agent->documents()->pluck('source_url')->sort()->values()->all())
+        ->toBe([PUBLIC_HOST.'/', PUBLIC_HOST.'/docs']);
+});
+
 it('processes a page into a single chunk and is idempotent on re-run', function () {
     Http::fake([
         '*' => Http::response('<html><head><title>Hello</title></head><body><main>The page body text.</main></body></html>'),

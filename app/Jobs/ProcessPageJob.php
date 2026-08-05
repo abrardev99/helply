@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Enums\DocumentStatus;
 use App\Enums\DocumentType;
 use App\Models\Document;
+use App\Services\Ingestion\DocumentCanonicalizer;
 use App\Services\Ingestion\TextChunker;
 use App\Support\SafeUrl;
 use GuzzleHttp\Psr7\UriResolver;
@@ -29,6 +30,13 @@ class ProcessPageJob implements ShouldQueue
      * HTML elements whose text is chrome, not page content.
      */
     private const NonContentTags = ['script', 'style', 'noscript', 'template', 'nav', 'header', 'footer', 'aside', 'form', 'svg'];
+
+    /**
+     * Path fragments that never hold readable content. Cloudflare rewrites obfuscated
+     * mailto links to `/cdn-cgi/l/email-protection`, which every crawl would otherwise
+     * queue and then fail on with a 404.
+     */
+    private const IgnoredPathFragments = ['/cdn-cgi/'];
 
     /**
      * Largest page body we will parse (2 MiB). Anything beyond this is truncated before
@@ -74,6 +82,16 @@ class ProcessPageJob implements ShouldQueue
             // Surface a non-2xx response as an exception so it routes through the failure
             // handling below (status => failed, then rethrow for the batch).
             $response->throw();
+
+            // Redirects mean the page we just fetched may live at a different URL than the
+            // one we asked for (an apex host 308-ing to `www` is the common case). Re-key
+            // the document to where the fetch actually landed so one page is not stored —
+            // and embedded — once per URL variant. Link discovery below then resolves
+            // relative hrefs against the real base URL too.
+            $document = (new DocumentCanonicalizer)->canonicalize(
+                $document,
+                (string) ($response->effectiveUri() ?? $document->source_url),
+            );
 
             $body = substr($response->body(), 0, self::MaxPageBytes);
             $extracted = $this->extractReadableText($body);
@@ -259,6 +277,10 @@ class ProcessPageJob implements ShouldQueue
 
             // Same-host only, so a crawl stays within the customer's site.
             if (strtolower($resolved->getHost()) !== $baseHost) {
+                continue;
+            }
+
+            if (Str::contains($resolved->getPath(), self::IgnoredPathFragments)) {
                 continue;
             }
 
