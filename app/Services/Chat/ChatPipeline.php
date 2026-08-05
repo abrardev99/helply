@@ -16,15 +16,18 @@ class ChatPipeline
         private ChunkRetriever $retriever,
         private Guardrail $guardrail,
         private AnswerGenerator $generator,
+        private QueryClassifier $classifier,
     ) {}
 
     /**
      * Answer a visitor question end-to-end with both guardrails:
      *
-     *   retrieve → relevance gate (pre-LLM) → generate → grounding check (post-LLM)
+     *   triage → retrieve → relevance gate (pre-LLM) → generate → grounding check (post-LLM)
      *
-     * A failure at either gate short-circuits to a canned refusal. In particular, a failed
-     * relevance gate never calls the (expensive) chat model.
+     * Triage routes small talk to a greeting so "hi" is not scored against the corpus and
+     * refused as off-topic. Everything else takes the retrieval path, where a failure at
+     * either gate short-circuits to a canned refusal. In particular, a failed relevance
+     * gate never calls the (expensive) chat model.
      *
      * @param  list<array{role: string, content: string}>  $history
      */
@@ -53,6 +56,18 @@ class ChatPipeline
      */
     private function answer(Agent $agent, string $question, array $history): ChatResult
     {
+        // Small talk needs no documents. Answering it here keeps a greeting from being
+        // scored against the corpus and refused for being off-topic.
+        if (! $this->classifier->needsDocumentLookup($agent, $question)) {
+            return new ChatResult(
+                answer: $this->guardrail->greetingMessage($agent),
+                outcome: ChatOutcome::Greeted,
+                sources: [],
+                retrievalScore: 0.0,
+                flagged: false,
+            );
+        }
+
         $retrieval = $this->retriever->retrieve($agent, $question);
 
         if (! $this->guardrail->passesRelevanceGate($retrieval, $agent)) {

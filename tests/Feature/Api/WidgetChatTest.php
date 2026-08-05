@@ -1,6 +1,7 @@
 <?php
 
 use App\Ai\Agents\GroundingChecker;
+use App\Ai\Agents\QueryTriage;
 use App\Ai\Agents\SupportAgent;
 use App\Models\Agent;
 use App\Models\Chunk;
@@ -31,6 +32,7 @@ function widgetAgent(): Agent
 function fakeAnsweringPipeline(): void
 {
     Embeddings::fake();
+    QueryTriage::fake([['needs_lookup' => true, 'reason' => 'a question']]);
     Reranking::fake([[new RankedDocument(index: 0, document: 'x', score: 0.95)]]);
     SupportAgent::fake(['Refunds are processed within 5 business days. [1]']);
     GroundingChecker::fake([['grounded' => true, 'reason' => 'supported']]);
@@ -126,6 +128,7 @@ it('throttles floods with a 429', function () {
     // Low relevance keeps each request cheap (no chat-model call) while still counting
     // against the limiter.
     Embeddings::fake();
+    QueryTriage::fake([['needs_lookup' => true, 'reason' => 'a question']]);
     Reranking::fake([[new RankedDocument(index: 0, document: 'x', score: 0.05)]]);
     $agent = widgetAgent();
 

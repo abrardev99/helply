@@ -28,12 +28,30 @@ class Guardrail
     public function __construct(private ResolvesTenantKey $keys) {}
 
     /**
+     * Floor applied when retrieval could not rerank, so the top score is a raw cosine
+     * similarity rather than a reranker's relevance score. The two are on different
+     * scales and are not interchangeable: against a real corpus, on-topic questions
+     * score roughly 0.50–0.70 by cosine while clearly off-topic ones sit below 0.10, so
+     * the agent's reranker-tuned threshold (0.75 by default) would refuse everything.
+     */
+    private const VectorOnlyRelevanceFloor = 0.35;
+
+    /**
      * Guardrail #1 — relevance gate (no LLM call). Passes only when the retrieval found
-     * usable chunks whose top score clears the agent's confidence threshold.
+     * usable chunks whose top score clears the threshold appropriate to how that score
+     * was produced.
      */
     public function passesRelevanceGate(RetrievalResult $retrieval, Agent $agent): bool
     {
-        return $retrieval->hits !== [] && $retrieval->topScore >= $agent->confidence_threshold;
+        if ($retrieval->hits === []) {
+            return false;
+        }
+
+        $threshold = $retrieval->reranked
+            ? $agent->confidence_threshold
+            : self::VectorOnlyRelevanceFloor;
+
+        return $retrieval->topScore >= $threshold;
     }
 
     /**
@@ -67,9 +85,15 @@ class Guardrail
      */
     public function refusalMessage(Agent $agent): string
     {
-        return __("I can only help with questions about :agent, and I couldn't find anything about that in our content.", [
-            'agent' => $agent->name,
-        ]);
+        return __("Sorry, I couldn't find anything about that in the content I have. I can only answer questions about this site — try asking me something it covers.");
+    }
+
+    /**
+     * Friendly reply to small talk, which needs no documentation lookup.
+     */
+    public function greetingMessage(Agent $agent): string
+    {
+        return __('Hi! I can answer questions about this site. What would you like to know?');
     }
 
     /**

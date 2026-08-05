@@ -4,10 +4,19 @@
     var INJECTED_BASE = @js(rtrim(config('app.url'), '/'));
 
     var script = document.currentScript;
-    var base = INJECTED_BASE;
+    var base = '';
 
-    if (!base && script && script.src) {
+    // Prefer the origin this script was loaded from: if the browser fetched widget.js
+    // from it, it can reach the chat endpoint there too, and the scheme already matches
+    // the host page (a https page calling a http endpoint is blocked as mixed content).
+    // APP_URL is only a fallback — it is a server-side value that often points at a host
+    // reachable only from the server, which surfaces in the widget as "Network error".
+    if (script && script.src) {
         try { base = new URL(script.src).origin; } catch (e) { base = ''; }
+    }
+
+    if (!base) {
+        base = INJECTED_BASE;
     }
 
     var agentId = script ? script.getAttribute('data-agent-id') : null;
