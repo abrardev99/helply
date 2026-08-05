@@ -9,14 +9,28 @@ use App\Http\Controllers\Agents\ReembedController;
 use App\Http\Controllers\Agents\WebsiteSourceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Teams\TeamInvitationController;
-use App\Http\Controllers\WaitlistController;
 use App\Http\Controllers\WidgetScriptController;
 use App\Http\Middleware\EnsureTeamMembership;
+use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SetTeamUrlDefaults;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-Route::inertia('/', 'welcome')->name('home');
-
-Route::post('waitlist', [WaitlistController::class, 'store'])->name('waitlist.store');
+// The landing page is static marketing copy, so it is served without the session,
+// CSRF and Inertia-sharing middleware the rest of the app relies on. Those are what
+// reach for the database (sessions table, Pennant's features table, the authenticated
+// user), and dropping them lets `/` render even when no database is reachable.
+Route::inertia('/', 'welcome')
+    ->name('home')
+    ->withoutMiddleware([
+        StartSession::class,
+        ShareErrorsFromSession::class,
+        PreventRequestForgery::class,
+        HandleInertiaRequests::class,
+        SetTeamUrlDefaults::class,
+    ]);
 
 Route::get('widget.js', WidgetScriptController::class)->name('widget.script');
 

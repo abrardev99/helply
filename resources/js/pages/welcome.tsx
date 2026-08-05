@@ -1,23 +1,19 @@
-import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { ArrowUp, ChevronLeft, MoreHorizontal, Smile, X } from 'lucide-react';
 import AppLogoIcon from '@/components/app-logo-icon';
-import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Spinner } from '@/components/ui/spinner';
-import { dashboard, login } from '@/routes';
-import { store as joinWaitlist } from '@/routes/waitlist';
 
+/**
+ * The public landing page. Deliberately free of any server state: it reads no shared
+ * Inertia props and posts nowhere, so `/` renders without a database connection (see
+ * the route's trimmed middleware stack in routes/web.php).
+ */
 export default function Welcome() {
-    const { auth, currentTeam, features } = usePage().props;
-    const dashboardUrl = currentTeam ? dashboard(currentTeam.slug) : '/';
-
     return (
         <>
             <Head title="Helply — a support agent that already knows your product">
                 <meta
                     name="description"
-                    content="Helply turns everything you've already written into a support agent that answers your customers instantly, in your voice, around the clock. Join the waitlist."
+                    content="Helply turns everything you've already written into a support agent that answers your customers instantly, in your voice, around the clock."
                 />
             </Head>
 
@@ -34,24 +30,6 @@ export default function Welcome() {
                             Helply
                         </span>
                     </Link>
-
-                    {auth.user ? (
-                        <Link
-                            href={dashboardUrl}
-                            className="text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
-                        >
-                            Dashboard
-                        </Link>
-                    ) : (
-                        features.auth && (
-                            <Link
-                                href={login()}
-                                className="text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
-                            >
-                                Log in
-                            </Link>
-                        )
-                    )}
                 </header>
 
                 <main className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-16 px-6 py-16 lg:grid-cols-[1.1fr_1fr] lg:gap-12 lg:py-24">
@@ -110,79 +88,6 @@ export default function Welcome() {
                             </div>
                         </dl>
 
-                        <div className="mt-10">
-                            <Form
-                                {...joinWaitlist.form()}
-                                resetOnSuccess={['email']}
-                                disableWhileProcessing
-                                className="max-w-md"
-                            >
-                                {({
-                                    processing,
-                                    errors,
-                                    recentlySuccessful,
-                                }) =>
-                                    recentlySuccessful ? (
-                                        <p
-                                            className="flex items-center gap-2 text-sm font-medium"
-                                            role="status"
-                                        >
-                                            <span className="flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                                                <svg
-                                                    className="size-3"
-                                                    viewBox="0 0 12 12"
-                                                    fill="none"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    aria-hidden="true"
-                                                >
-                                                    <path
-                                                        d="M2.5 6.5 5 9l4.5-5.5"
-                                                        stroke="currentColor"
-                                                        strokeWidth="1.5"
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                    />
-                                                </svg>
-                                            </span>
-                                            You&apos;re on the list. We&apos;ll
-                                            be in touch.
-                                        </p>
-                                    ) : (
-                                        <>
-                                            <div className="flex flex-col gap-2 sm:flex-row">
-                                                <Input
-                                                    id="email"
-                                                    type="email"
-                                                    name="email"
-                                                    required
-                                                    autoComplete="email"
-                                                    placeholder="you@company.com"
-                                                    aria-label="Email address"
-                                                    className="h-11 sm:flex-1"
-                                                />
-                                                <Button
-                                                    type="submit"
-                                                    size="lg"
-                                                    className="h-11"
-                                                >
-                                                    {processing && <Spinner />}
-                                                    Join the waitlist
-                                                </Button>
-                                            </div>
-                                            <InputError
-                                                message={errors.email}
-                                                className="mt-2"
-                                            />
-                                            <p className="mt-3 text-xs text-muted-foreground">
-                                                We'll only ever use your email
-                                                for product announcements —
-                                                never anything else.
-                                            </p>
-                                        </>
-                                    )
-                                }
-                            </Form>
-                        </div>
                     </div>
 
                     <div className="flex justify-center px-2 lg:justify-self-end">

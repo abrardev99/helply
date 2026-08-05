@@ -11,7 +11,6 @@ use App\Models\Message;
 use App\Models\Team;
 use App\Models\TeamInvitation;
 use App\Models\User;
-use App\Models\WaitlistEntry;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -75,7 +74,6 @@ class AppServiceProvider extends ServiceProvider
             'chunk' => Chunk::class,
             'conversation' => Conversation::class,
             'message' => Message::class,
-            'waitlist_entry' => WaitlistEntry::class,
         ]);
     }
 

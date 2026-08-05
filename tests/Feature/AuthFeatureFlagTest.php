@@ -40,22 +40,10 @@ test('register is not accessible when the auth feature is off', function () {
     ])->assertNotFound();
 });
 
-test('the welcome page stays public and hides the log in link when auth is off', function () {
+test('the welcome page stays public when auth is off', function () {
     disableAuthFeature();
 
     $this->get(route('home'))
         ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('welcome')
-            ->where('features.auth', false),
-        );
-});
-
-test('the waitlist stays open when auth is off', function () {
-    disableAuthFeature();
-
-    $this->from(route('home'))
-        ->post(route('waitlist.store'), ['email' => 'founder@example.com'])
-        ->assertRedirect(route('home'))
-        ->assertSessionHasNoErrors();
+        ->assertInertia(fn (Assert $page) => $page->component('welcome'));
 });
