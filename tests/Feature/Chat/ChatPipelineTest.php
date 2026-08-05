@@ -47,7 +47,7 @@ it('refuses off-topic questions at the relevance gate without calling the chat m
 
     expect($result->outcome)->toBe(ChatOutcome::RefusedLowRelevance)
         ->and($result->flagged)->toBeTrue()
-        ->and($result->answer)->toContain("couldn't find anything about that")
+        ->and($result->answer)->toContain('outside what I can help with')
         ->and($result->sources)->toBe([]);
 
     SupportAgent::assertNeverPrompted();
@@ -117,5 +117,5 @@ it('refuses when the answer fails the grounding check', function () {
 
     expect($result->outcome)->toBe(ChatOutcome::RefusedUngrounded)
         ->and($result->flagged)->toBeTrue()
-        ->and($result->answer)->toContain("couldn't find anything about that");
+        ->and($result->answer)->toContain('outside what I can help with');
 });

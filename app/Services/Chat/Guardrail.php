@@ -85,7 +85,7 @@ class Guardrail
      */
     public function refusalMessage(Agent $agent): string
     {
-        return __("Sorry, I couldn't find anything about that in the content I have. I can only answer questions about this site — try asking me something it covers.");
+        return __("That question is outside what I can help with here. I'm able to answer questions about this site — try asking me something it covers.");
     }
 
     /**
