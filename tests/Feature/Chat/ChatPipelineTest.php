@@ -66,7 +66,7 @@ it('answers on-topic questions that pass both guardrails', function () {
 
     expect($result->outcome)->toBe(ChatOutcome::Answered)
         ->and($result->flagged)->toBeFalse()
-        ->and($result->answer)->toBe('Refunds are processed within 5 business days. [1]')
+        ->and($result->answer)->toBe('Refunds are processed within 5 business days.')
         ->and($result->sources)->not->toBe([]);
 });
 

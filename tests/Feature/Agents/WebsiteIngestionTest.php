@@ -310,6 +310,38 @@ it('processes a page into a single chunk and is idempotent on re-run', function 
         ->and($document->chunks()->first()->content)->toContain('page body text');
 });
 
+it('keeps prose wrapped in a form but drops its controls and chrome', function () {
+    Http::fake([
+        '*' => Http::response('<html><body>'
+            .'<nav>Home About Contact</nav>'
+            .'<main>Software engineer and consultant.</main>'
+            // Real copy commonly lives inside a form — a hire-me pitch, a newsletter blurb.
+            .'<form><h2>Hire me</h2><p>I am available to hire for Laravel and PHP work.</p>'
+            .'<input type="email" value="you@example.com"><button>Join</button></form>'
+            .'<footer>All rights reserved</footer>'
+            .'</body></html>'),
+    ]);
+
+    $agent = Agent::factory()->create();
+    $document = Document::factory()->for($agent)->create([
+        'type' => DocumentType::Web,
+        'source_url' => PUBLIC_HOST.'/',
+        'status' => DocumentStatus::Processing,
+    ]);
+
+    (new ProcessPageJob($document->id))->handle();
+
+    $content = $document->chunks()->first()->content;
+
+    expect($content)->toContain('available to hire for Laravel and PHP work')
+        ->and($content)->toContain('Hire me')
+        ->and($content)->toContain('Software engineer and consultant.')
+        // Controls and page chrome are still excluded.
+        ->and($content)->not->toContain('Join')
+        ->and($content)->not->toContain('Home About Contact')
+        ->and($content)->not->toContain('All rights reserved');
+});
+
 it('refuses to fetch a page whose URL targets a private address', function () {
     Http::fake();
 

@@ -29,7 +29,13 @@ class ProcessPageJob implements ShouldQueue
     /**
      * HTML elements whose text is chrome, not page content.
      */
-    private const NonContentTags = ['script', 'style', 'noscript', 'template', 'nav', 'header', 'footer', 'aside', 'form', 'svg'];
+    /**
+     * `form` is deliberately absent: sites routinely wrap real copy in one — a "Hire me"
+     * pitch, a newsletter blurb, a contact block — and dropping the element discards that
+     * prose along with the controls. The interactive controls are removed individually
+     * instead, so the surrounding text survives without "Submit"-style chrome.
+     */
+    private const NonContentTags = ['script', 'style', 'noscript', 'template', 'nav', 'header', 'footer', 'aside', 'svg', 'button', 'input', 'select', 'textarea'];
 
     /**
      * Path fragments that never hold readable content. Cloudflare rewrites obfuscated

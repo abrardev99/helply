@@ -53,7 +53,7 @@ it('answers and persists both messages under one conversation', function () {
 
     $response->assertOk()
         ->assertJson([
-            'answer' => 'Refunds are processed within 5 business days. [1]',
+            'answer' => 'Refunds are processed within 5 business days.',
         ])
         ->assertJsonStructure(['answer', 'sources', 'conversation_id', 'session_token']);
 

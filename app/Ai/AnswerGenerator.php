@@ -30,6 +30,28 @@ class AnswerGenerator
         $answer = $this->keys->withTenantKey($agent, fn (): string => (string) (new SupportAgent($agent, $packed->context, $history))
             ->prompt($question, provider: Lab::OpenAI, model: $agent->chat_model));
 
-        return new GeneratedAnswer(answer: $answer, sources: $packed->sources);
+        return new GeneratedAnswer(
+            answer: $this->withoutCitationMarkers($answer),
+            sources: $packed->sources,
+        );
+    }
+
+    /**
+     * Strip citation markers the model echoed from the packed context.
+     *
+     * The instructions already forbid them, but models reproduce the numbering they are
+     * shown often enough that the visitor-facing text needs a guarantee. Only markers
+     * standing on their own are removed — a bracketed number attached to a preceding
+     * token is array access in a code sample (`$items[0]`), not a citation.
+     */
+    private function withoutCitationMarkers(string $answer): string
+    {
+        $patterns = [
+            '/(?<![\w$)\]])\[\s*\d+(?:\s*[,;]\s*\d+)*\s*\]/' => '', // [1], [2, 3]
+            '/[ \t]{2,}/' => ' ',                                   // gaps left behind
+            '/[ \t]+([.,;:!?])/' => '$1',                           // " ." -> "."
+        ];
+
+        return trim(preg_replace(array_keys($patterns), array_values($patterns), $answer) ?? $answer);
     }
 }
