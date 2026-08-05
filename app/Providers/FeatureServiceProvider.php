@@ -7,9 +7,6 @@ use Laravel\Pennant\Feature;
 
 class FeatureServiceProvider extends ServiceProvider
 {
-    /**
-     * Bootstrap services.
-     */
     public function boot(): void
     {
         $this->defineFeatures();

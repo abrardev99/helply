@@ -240,3 +240,10 @@ Use Wayfinder to generate TypeScript functions for Laravel routes. Import from `
 ## Translations
 
 - All user-facing strings MUST be wrapped in the `__()` translation helper. English is the default locale: use the English string itself as the key (e.g. `__('Pending')`), so no translation file is required until other locales are added.
+
+## Comments
+
+- Comments explain **why**, never **what**. If a comment only restates the identifier it sits on, delete it. `/** Run the migrations. */`, `/** Determine if the user is authorized to make this request. */`, and `/** Define the model's default state. */` are generator boilerplate — remove them from generated files rather than leaving them in place.
+- Do keep comments that carry information the code cannot: security rationale (SSRF and tenant-isolation guards), idempotency and concurrency reasoning, non-obvious ordering constraints, and notes on why an alternative was rejected.
+- Keep PHPDoc that exists for static analysis — `@return`, `@param`, `@var`, `@property`, `@extends`, `@use`, array shapes and generics. Larastan depends on these. When a docblock holds only a boilerplate description plus one annotation, collapse it to a single line: `/** @return array<string, mixed> */`.
+- The same rule applies to JSX: drop section-label comments like `{/* Header */}` that only name the markup beneath them.

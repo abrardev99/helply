@@ -39,8 +39,6 @@ class Agent extends Model
     use HasUuids;
 
     /**
-     * The attributes that should be hidden from array/JSON serialization.
-     *
      * Keeps the decrypted per-agent OpenAI key out of any Inertia/JSON payload.
      *
      * @var list<string>

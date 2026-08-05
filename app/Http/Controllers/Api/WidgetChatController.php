@@ -10,9 +10,6 @@ use App\Models\Agent;
 
 class WidgetChatController extends Controller
 {
-    /**
-     * Handle a public widget chat message for a agent.
-     */
     public function __invoke(ChatMessageRequest $request, Agent $agent, HandleChatMessage $action): WidgetChatResponse
     {
         return $action->handle(

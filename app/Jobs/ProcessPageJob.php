@@ -190,9 +190,6 @@ class ProcessPageJob implements ShouldQueue
         ];
     }
 
-    /**
-     * Return the first element node matching an XPath expression, or null.
-     */
     private function firstNode(\DOMXPath $xpath, string $expression): ?\DOMNode
     {
         $nodes = $xpath->query($expression);

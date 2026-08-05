@@ -219,7 +219,6 @@ function SupportAgentPreview() {
             <div className="absolute -inset-6 -z-10 rounded-[2.5rem] bg-primary/10 blur-2xl" />
 
             <div className="overflow-hidden rounded-[1.75rem] border border-border bg-card shadow-2xl ring-1 ring-black/5 dark:ring-white/10">
-                {/* Header */}
                 <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
                     <ChevronLeft className="size-5 shrink-0 text-muted-foreground" />
                     <div className="flex -space-x-2">
@@ -239,7 +238,6 @@ function SupportAgentPreview() {
                     <X className="size-5 shrink-0 text-muted-foreground" />
                 </div>
 
-                {/* Conversation */}
                 <div className="space-y-5 px-4 py-5">
                     <div>
                         <div className="w-fit max-w-[85%] rounded-2xl rounded-bl-md bg-muted px-3.5 py-2.5 text-sm leading-relaxed text-foreground">
@@ -269,7 +267,6 @@ function SupportAgentPreview() {
                     </div>
                 </div>
 
-                {/* Composer */}
                 <div className="px-3 pb-3">
                     <div className="rounded-2xl border border-border px-4 py-3">
                         <p className="text-sm text-muted-foreground">

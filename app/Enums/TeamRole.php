@@ -45,9 +45,6 @@ enum TeamRole: string
         };
     }
 
-    /**
-     * Check if this role is at least as privileged as another role.
-     */
     public function isAtLeast(TeamRole $role): bool
     {
         return $this->level() >= $role->level();

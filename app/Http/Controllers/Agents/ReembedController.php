@@ -11,9 +11,6 @@ use Inertia\Inertia;
 
 class ReembedController extends Controller
 {
-    /**
-     * Re-embed all of a agent's chunks from scratch (clears and recomputes vectors).
-     */
     public function __invoke(string $currentTeam, Agent $agent): RedirectResponse
     {
         Gate::authorize('update', $agent);

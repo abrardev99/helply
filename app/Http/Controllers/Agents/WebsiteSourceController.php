@@ -14,9 +14,6 @@ use Inertia\Inertia;
 
 class WebsiteSourceController extends Controller
 {
-    /**
-     * Add a website URL to an agent and kick off a crawl.
-     */
     public function store(StoreWebsiteSourceRequest $request, string $currentTeam, Agent $agent): RedirectResponse
     {
         // Normalize so the seed dedupes with the same page discovered via link-following.

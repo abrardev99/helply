@@ -11,11 +11,7 @@ use Illuminate\Support\Str;
  */
 class TeamFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     public function definition(): array
     {
         $name = fake()->unique()->company();
@@ -27,9 +23,6 @@ class TeamFactory extends Factory
         ];
     }
 
-    /**
-     * Indicate that the team is a personal team.
-     */
     public function personal(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -37,9 +30,6 @@ class TeamFactory extends Factory
         ]);
     }
 
-    /**
-     * Indicate that the team has been deleted.
-     */
     public function trashed(): static
     {
         return $this->state(fn (array $attributes) => [

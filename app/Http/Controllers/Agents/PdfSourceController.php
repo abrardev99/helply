@@ -13,9 +13,6 @@ use Inertia\Inertia;
 
 class PdfSourceController extends Controller
 {
-    /**
-     * Upload a PDF to a agent and queue its text extraction.
-     */
     public function store(StorePdfRequest $request, string $currentTeam, Agent $agent): RedirectResponse
     {
         $file = $request->file('file');

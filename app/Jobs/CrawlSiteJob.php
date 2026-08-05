@@ -241,8 +241,6 @@ class CrawlSiteJob implements ShouldQueue
     }
 
     /**
-     * Extract trimmed, non-empty text values from a list of <loc> nodes.
-     *
      * @param  DOMNodeList<DOMNode|DOMNameSpaceNode>  $nodes
      * @return list<string>
      */
@@ -265,9 +263,6 @@ class CrawlSiteJob implements ShouldQueue
         return $values;
     }
 
-    /**
-     * Build the sitemap.xml URL for the seed URL's scheme + host.
-     */
     private function sitemapUrlFor(string $seedUrl): string
     {
         $uri = Uri::of($seedUrl);
@@ -276,9 +271,6 @@ class CrawlSiteJob implements ShouldQueue
         return ($uri->scheme() ?: 'https').'://'.$authority.'/sitemap.xml';
     }
 
-    /**
-     * Safely parse a sitemap body into a DOMXPath, or null when it isn't valid XML.
-     */
     private function xpathFor(string $body): ?DOMXPath
     {
         if (trim($body) === '') {
@@ -297,9 +289,6 @@ class CrawlSiteJob implements ShouldQueue
         return $loaded ? new DOMXPath($dom) : null;
     }
 
-    /**
-     * Move this agent's claimed (processing) documents to 'failed'.
-     */
     private function markProcessingAsFailed(): void
     {
         Document::query()

@@ -13,9 +13,6 @@ use Inertia\Response;
 
 class ConversationsController extends Controller
 {
-    /**
-     * List a agent's conversations, with light analytics and an optional flagged filter.
-     */
     public function index(Request $request, string $currentTeam, Agent $agent): Response
     {
         Gate::authorize('view', $agent);
@@ -47,9 +44,6 @@ class ConversationsController extends Controller
         ]);
     }
 
-    /**
-     * Show a single conversation transcript with sources and retrieval scores.
-     */
     public function show(string $currentTeam, Agent $agent, string $conversation): Response
     {
         Gate::authorize('view', $agent);
@@ -80,11 +74,7 @@ class ConversationsController extends Controller
         ]);
     }
 
-    /**
-     * Simple counts for the conversations dashboard.
-     *
-     * @return array{conversations: int, messages: int, flagged: int, flaggedPercent: int}
-     */
+    /** @return array{conversations: int, messages: int, flagged: int, flaggedPercent: int} */
     private function analytics(Agent $agent): array
     {
         $conversationIds = $agent->conversations()->pluck('id');
